@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastLib | Ultra-Fast Library Management</title>
+    <meta name="description" content="Experience sub-millisecond search across hundreds of thousands of titles. FastLib is the next generation of library management.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <div class="logo" id="logo-home">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">FastLib</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#performance" class="nav-link">Performance</a>
+                <!-- Guest state -->
+                <div id="guest-nav">
+                    <button class="btn-primary" id="open-signin-btn">Sign In</button>
+                </div>
+                <!-- Logged-in state -->
+                <div id="user-nav" class="hidden">
+                    <div class="user-menu" id="user-menu-toggle">
+                        <div class="user-avatar" id="user-avatar-nav">J</div>
+                        <span class="user-name" id="user-name-nav">User</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="user-dropdown hidden" id="user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="dropdown-avatar" id="dropdown-avatar">J</div>
+                            <div>
+                                <div class="dropdown-name" id="dropdown-name">Jane Doe</div>
+                                <div class="dropdown-email" id="dropdown-email">jane@example.com</div>
+                            </div>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item" id="my-books-link">📚 My Borrowed Books</a>
+                        <a href="#" class="dropdown-item" id="waitlist-link">🔔 My Waitlist</a>
+                        <a href="#" class="dropdown-item" id="profile-link">👤 Profile Settings</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item danger" id="signout-btn">🚪 Sign Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== HERO ===== -->
+    <header class="hero" id="home">
+        <div class="container hero-content">
+            <h1 class="hero-title">Discover Knowledge Instantly</h1>
+            <p class="hero-tagline">100,000+ titles · Sub-millisecond search</p>
+
+            <div class="hero-visual">
+                <img src="hero.png" alt="FastLib Hero" class="hero-img">
+            </div>
+
+            <div class="search-container fade-up">
+                <div class="search-wrapper">
+                    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="main-search" placeholder="Search by title, author, or ISBN..." autocomplete="off">
+                    <kbd class="search-shortcut">/</kbd>
+                </div>
+                <div id="search-results" class="search-results hidden"></div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">100K+</div>
+                    <div class="stat-label">Titles indexed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">&lt;1ms</div>
+                    <div class="stat-label">Retrieval time</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">25%</div>
+                    <div class="stat-label">Storage savings</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== FEATURES SECTION ===== -->
+    <section id="features" class="section features-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Why FastLib</span>
+                <h2 class="section-title">Built for the Modern Library</h2>
+                <p class="section-subtitle">Everything you need to manage, discover, and borrow — in one elegant platform.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(37,99,235,0.1)">
+                        <span class="feature-icon">⚡</span>
+                    </div>
+                    <h3 class="feature-title">Sub-Millisecond Search</h3>
+                    <p class="feature-desc">Our B-Tree powered search engine returns results before you finish typing — consistently under 1ms even across 100,000+ titles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(16,185,129,0.1)">
+                        <span class="feature-icon">🏛️</span>
+                    </div>
+                    <h3 class="feature-title">Multi-Branch Availability</h3>
+                    <p class="feature-desc">See real-time availability across every branch. Know exactly where to pick up your book before you leave home.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.1)">
+                        <span class="feature-icon">🔔</span>
+                    </div>
+                    <h3 class="feature-title">Smart Waitlist</h3>
+                    <p class="feature-desc">Automatically join the waitlist for unavailable titles. Get notified the moment a copy is returned at any branch near you.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(245,158,11,0.1)">
+                        <span class="feature-icon">📊</span>
+                    </div>
+                    <h3 class="feature-title">25% Storage Savings</h3>
+                    <p class="feature-desc">Our compressed index format stores 100K+ records in a fraction of the space, reducing infrastructure costs without sacrificing speed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(239,68,68,0.1)">
+                        <span class="feature-icon">🔒</span>
+                    </div>
+                    <h3 class="feature-title">Secure Accounts</h3>
+                    <p class="feature-desc">Manage your borrowing history, active loans, and waitlists — all from a personal, secure account with full privacy controls.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(14,165,233,0.1)">
+                        <span class="feature-icon">📱</span>
+                    </div>
+                    <h3 class="feature-title">Works Everywhere</h3>
+                    <p class="feature-desc">Fully responsive across desktop, tablet, and mobile. Access the entire catalog from any device, anywhere, any time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PERFORMANCE SECTION ===== -->
+    <section id="performance" class="section performance-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Under the Hood</span>
+                <h2 class="section-title">Performance That Speaks Itself</h2>
+                <p class="section-subtitle">Real benchmarks. Real numbers. No marketing fluff.</p>
+            </div>
+            <div class="perf-grid">
+                <div class="perf-card">
+                    <div class="perf-metric">0.3ms</div>
+                    <div class="perf-label">Avg. search latency</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 3%"></div></div>
+                    <div class="perf-compare">vs 320ms industry avg.</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">100K+</div>
+                    <div class="perf-label">Books indexed</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 100%"></div></div>
+                    <div class="perf-compare">Prefix search across all fields</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">25%</div>
+                    <div class="perf-label">Less disk usage</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 75%"></div></div>
+                    <div class="perf-compare">vs traditional MySQL full-text</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">99.9%</div>
+                    <div class="perf-label">Uptime SLA</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 99%"></div></div>
+                    <div class="perf-compare">High-availability architecture</div>
+                </div>
+            </div>
+
+            <div class="tech-stack">
+                <p class="tech-label">Powered by</p>
+                <div class="tech-chips">
+                    <span class="tech-chip">B-Tree Index</span>
+                    <span class="tech-chip">Node.js</span>
+                    <span class="tech-chip">Express</span>
+                    <span class="tech-chip">MySQL 8</span>
+                    <span class="tech-chip">Prefix Matching</span>
+                    <span class="tech-chip">Connection Pooling</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">FastLib</span>
+            </div>
+            <p class="footer-copy">© 2026 FastLib. Built for speed, designed for people.</p>
+            <div class="footer-links">
+                <a href="#features">Features</a>
+                <a href="#performance">Performance</a>
+                <a href="#" id="footer-signin">Sign In</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== SIGN IN / REGISTER MODAL ===== -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-container auth-modal-container">
+            <button id="auth-modal-close" class="modal-close" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="auth-header">
+                <div class="auth-logo">⚡ FastLib</div>
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tab-signin">Sign In</button>
+                    <button class="auth-tab" id="tab-register">Register</button>
+                </div>
+            </div>
+
+            <!-- Sign In Form -->
+            <form id="signin-form" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label" for="signin-email">Email</label>
+                    <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signin-password">Password</label>
+                    <input class="form-input" type="password" id="signin-password" placeholder="••••••••" required>
+                </div>
+                <div id="signin-error" class="form-error hidden"></div>
+                <button type="submit" class="btn-auth">Sign In</button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label class="form-label" for="reg-name">Full Name</label>
+                    <input class="form-input" type="text" id="reg-name" placeholder="Jane Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-email">Email</label>
+                    <input class="form-input" type="email" id="reg-email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="reg-password">Password</label>
+                    <input class="form-input" type="password" id="reg-password" placeholder="Min. 6 characters" required>
+                </div>
+                <div id="register-error" class="form-error hidden"></div>
+                <button type="submit" class="btn-auth">Create Account</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="switch-to-signin">Sign in here</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== BOOK DETAIL MODAL ===== -->
+    <div id="book-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <button id="modal-close" class="modal-close" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="modal-body">
+                <div class="modal-cover">
+                    <div id="book-cover" class="book-cover-art">
+                        <span class="cover-icon">📖</span>
+                    </div>
+                </div>
+                <div class="modal-info">
+                    <span id="book-genre-badge" class="genre-badge modal-genre"></span>
+                    <h2 id="book-title" class="modal-title"></h2>
+                    <p id="book-author" class="modal-author"></p>
+                    <p id="book-description" class="modal-description"></p>
+                    <div class="branch-availability">
+                        <h3 class="branch-heading">Branch Availability</h3>
+                        <div id="branch-list" class="branch-list"></div>
+                    </div>
+                    <div id="book-actions" class="modal-actions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MY LIBRARY MODAL ===== -->
+    <div id="library-modal" class="modal-overlay hidden">
+        <div class="modal-container auth-modal-container">
+            <button id="library-modal-close" class="modal-close" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h2 class="library-modal-title" id="library-modal-title">My Borrowed Books</h2>
+            <div id="library-modal-content" class="library-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- ===== PROFILE SETTINGS MODAL ===== -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-container auth-modal-container profile-modal-container">
+            <button id="profile-modal-close" class="modal-close" aria-label="Close">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div class="profile-header">
+                <div class="profile-avatar-large" id="profile-avatar-large">J</div>
+                <div>
+                    <h2 class="profile-name" id="profile-display-name">Jane Doe</h2>
+                    <p class="profile-email-display" id="profile-display-email">jane@example.com</p>
+                </div>
+            </div>
+
+            <div class="profile-tabs">
+                <button class="profile-tab active" id="ptab-account">Account Info</button>
+                <button class="profile-tab" id="ptab-password">Change Password</button>
+            </div>
+
+            <!-- Account Info Form -->
+            <form id="profile-account-form" class="auth-form profile-form">
+                <div class="form-group">
+                    <label class="form-label" for="profile-name">Full Name</label>
+                    <input class="form-input" type="text" id="profile-name" placeholder="Jane Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="profile-email">Email Address</label>
+                    <input class="form-input" type="email" id="profile-email" placeholder="you@example.com" required>
+                </div>
+                <div id="profile-account-msg" class="form-msg hidden"></div>
+                <button type="submit" class="btn-auth">Save Changes</button>
+            </form>
+
+            <!-- Change Password Form -->
+            <form id="profile-password-form" class="auth-form profile-form hidden">
+                <div class="form-group">
+                    <label class="form-label" for="profile-current-pw">Current Password</label>
+                    <input class="form-input" type="password" id="profile-current-pw" placeholder="Enter current password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="profile-new-pw">New Password</label>
+                    <input class="form-input" type="password" id="profile-new-pw" placeholder="Min. 6 characters" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="profile-confirm-pw">Confirm New Password</label>
+                    <input class="form-input" type="password" id="profile-confirm-pw" placeholder="Repeat new password" required>
+                </div>
+                <div id="profile-pw-msg" class="form-msg hidden"></div>
+                <button type="submit" class="btn-auth">Update Password</button>
+            </form>
+
+            <div class="danger-zone">
+                <p class="danger-label">Danger Zone</p>
+                <button id="delete-account-btn" class="btn-danger">🗑️ Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
