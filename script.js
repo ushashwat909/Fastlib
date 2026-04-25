@@ -7,6 +7,220 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResults = document.getElementById('search-results');
     const statCards = document.querySelectorAll('.stat-card');
 
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const iconSun = themeToggle.querySelector('.icon-sun');
+    const iconMoon = themeToggle.querySelector('.icon-moon');
+    
+    // Check saved theme
+    const savedTheme = localStorage.getItem('fastlib_theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        iconSun.classList.add('hidden');
+        iconMoon.classList.remove('hidden');
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.body.removeAttribute('data-theme');
+            localStorage.setItem('fastlib_theme', 'light');
+            iconSun.classList.remove('hidden');
+            iconMoon.classList.add('hidden');
+        } else {
+            document.body.setAttribute('data-theme', 'dark');
+            localStorage.setItem('fastlib_theme', 'dark');
+            iconSun.classList.add('hidden');
+            iconMoon.classList.remove('hidden');
+        }
+    });
+
+    // ============================
+    // Tab Navigation Logic
+    // ============================
+    const navLinks = document.querySelectorAll('.nav-links-center .nav-link');
+    const tabViews = document.querySelectorAll('.tab-view');
+
+    function switchTab(hash) {
+        if (!hash) hash = '#home';
+        
+        // Update nav links
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === hash) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+
+        // Show correct view
+        const viewId = hash.substring(1) + '-view';
+        tabViews.forEach(view => {
+            if (view.id === viewId) {
+                view.classList.remove('hidden');
+            } else {
+                view.classList.add('hidden');
+            }
+        });
+
+        // Trigger data fetch if needed
+        if (hash === '#books') fetchBooksTab();
+        if (hash === '#genres') fetchGenresTab();
+        if (hash === '#authors') fetchAuthorsTab();
+    }
+
+    // Handle hash change
+    window.addEventListener('hashchange', () => switchTab(window.location.hash));
+    
+    // Initial load
+    if (window.location.hash) {
+        switchTab(window.location.hash);
+    }
+
+    // ============================
+    // Fetch Data for Tabs
+    // ============================
+    async function fetchBooksTab() {
+        const container = document.getElementById('books-container');
+        if (container.dataset.loaded) return; // Prevent refetching
+        try {
+            const res = await fetch('/api/books');
+            const books = await res.json();
+            container.innerHTML = '';
+            books.forEach(book => {
+                const div = document.createElement('div');
+                div.className = 'book-card';
+                div.innerHTML = `
+                    <div class="book-cover">
+                        <div class="book-placeholder">
+                            <span class="icon">📚</span>
+                            <span class="genre">${book.genre}</span>
+                        </div>
+                    </div>
+                    <div class="book-info">
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">${book.author}</p>
+                    </div>
+                `;
+                div.addEventListener('click', () => openBookModal(book.id));
+                container.appendChild(div);
+            });
+            container.dataset.loaded = "true";
+        } catch (e) {
+            container.innerHTML = '<div class="loading-state">Failed to load books.</div>';
+        }
+    }
+
+    async function fetchGenresTab() {
+        const container = document.getElementById('genres-container');
+        if (container.dataset.loaded) return;
+        try {
+            const res = await fetch('/api/genres');
+            const genres = await res.json();
+            container.innerHTML = '';
+            genres.forEach(genre => {
+                const div = document.createElement('div');
+                div.className = 'genre-card-large';
+                div.innerHTML = `
+                    <h3 class="genre-title-large">${genre.genre}</h3>
+                    <p class="genre-count-large">${genre.count} books</p>
+                `;
+                div.addEventListener('click', () => {
+                    window.location.hash = '#books';
+                    fetchBooksByQuery(`subject:${genre.genre}`);
+                });
+                container.appendChild(div);
+            });
+            container.dataset.loaded = "true";
+        } catch (e) {
+            container.innerHTML = '<div class="loading-state">Failed to load genres.</div>';
+        }
+    }
+
+    async function fetchAuthorsTab() {
+        const container = document.getElementById('authors-container');
+        if (container.dataset.loaded) return;
+        try {
+            const res = await fetch('/api/authors');
+            const authors = await res.json();
+            container.innerHTML = '';
+            authors.forEach(author => {
+                const div = document.createElement('div');
+                div.className = 'author-card';
+                div.innerHTML = `
+                    <h3 class="author-name">${author.author}</h3>
+                    <p class="author-count">${author.count} books</p>
+                `;
+                div.addEventListener('click', () => {
+                    window.location.hash = '#books';
+                    fetchBooksByQuery(`inauthor:"${author.author}"`);
+                });
+                container.appendChild(div);
+            });
+            container.dataset.loaded = "true";
+        } catch (e) {
+            container.innerHTML = '<div class="loading-state">Failed to load authors.</div>';
+        }
+    }
+
+    async function fetchBooksByQuery(query, limit = 40) {
+        const container = document.getElementById('books-container');
+        container.innerHTML = '<div class="loading-state">Loading books from Google...</div>';
+        try {
+            const res = await fetch(`/api/books/google?q=${encodeURIComponent(query)}&limit=${limit}`);
+            const books = await res.json();
+            container.innerHTML = '';
+            if (books.length === 0) {
+                container.innerHTML = '<div class="loading-state">No books found.</div>';
+                return;
+            }
+            books.forEach(book => {
+                const div = document.createElement('div');
+                div.className = 'book-card';
+                div.innerHTML = `
+                    <div class="book-cover">
+                        ${book.coverImage ? `<img src="${book.coverImage}" alt="Cover">` : `
+                        <div class="book-placeholder">
+                            <span class="icon">📚</span>
+                            <span class="genre">${book.genre}</span>
+                        </div>`}
+                    </div>
+                    <div class="book-info">
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">${book.author}</p>
+                    </div>
+                `;
+                div.addEventListener('click', () => openBookModal(book.id));
+                container.appendChild(div);
+            });
+        } catch (e) {
+            container.innerHTML = '<div class="loading-state">Failed to load books.</div>';
+        }
+    }
+
+    // Logo click to home
+    const logoHome = document.getElementById('logo-home');
+    if (logoHome) {
+        logoHome.addEventListener('click', () => {
+            window.location.hash = '#home';
+        });
+    }
+
+    // Curated Collections Click Handlers
+    const setupCollectionHandler = (id, query) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', () => {
+                window.location.hash = '#books';
+                fetchBooksByQuery(query, 40);
+            });
+        }
+    };
+    setupCollectionHandler('collection-awards', 'pulitzer OR booker OR "nobel prize"');
+    setupCollectionHandler('collection-nyt', '"new york times bestseller"');
+    setupCollectionHandler('collection-mind', 'subject:science OR subject:philosophy OR subject:psychology');
+    setupCollectionHandler('collection-staff', 'subject:fiction bestseller');
+
     // Auth elements
     const authModal = document.getElementById('auth-modal');
     const authModalClose = document.getElementById('auth-modal-close');
@@ -50,7 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getUserData(email) {
         const key = `fastlib_data_${email}`;
-        return JSON.parse(localStorage.getItem(key) || '{"borrowed":[],"waitlist":[]}');
+        const data = JSON.parse(localStorage.getItem(key) || '{"borrowed":[],"waitlist":[],"history":[]}');
+        if (!data.history) data.history = [];
+        return data;
     }
 
     function saveUserData(email, data) {
@@ -209,13 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('my-books-link').addEventListener('click', (e) => {
         e.preventDefault();
         userDropdown.classList.add('hidden');
-        openLibraryModal('borrowed');
+        window.location.href = '/dashboard.html';
     });
 
     document.getElementById('waitlist-link').addEventListener('click', (e) => {
         e.preventDefault();
         userDropdown.classList.add('hidden');
-        openLibraryModal('waitlist');
+        window.location.href = '/dashboard.html#waitlist';
     });
 
     document.getElementById('profile-link').addEventListener('click', (e) => {
@@ -519,20 +735,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchSuggestions(query) {
-        try {
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-            if (!res.ok) throw new Error('fail');
-            const apiResults = await res.json();
-            return apiResults.map(r => mockBooks.find(m => m.title === r.title) || { ...r, coverGradient: ['#1e3a5f','#3b82f6'], branches: [{ name: 'Main Branch', copies: r.available_copies || 0 }] });
-        } catch {
-            const q = query.toLowerCase();
-            return mockBooks.filter(b =>
-                b.title.toLowerCase().startsWith(q) ||
-                b.author.toLowerCase().startsWith(q) ||
-                b.title.toLowerCase().includes(q) ||
-                b.author.toLowerCase().includes(q)
-            ).slice(0, 6);
-        }
+        // Fetch from both local and Google Books in parallel
+        const localPromise = (async () => {
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error('fail');
+                const apiResults = await res.json();
+                return apiResults.map(r => mockBooks.find(m => m.title === r.title) || { ...r, coverGradient: ['#1e3a5f','#3b82f6'], branches: [{ name: 'Main Branch', copies: r.available_copies || 0 }], source: 'local' });
+            } catch {
+                const q = query.toLowerCase();
+                return mockBooks.filter(b =>
+                    b.title.toLowerCase().startsWith(q) ||
+                    b.author.toLowerCase().startsWith(q) ||
+                    b.title.toLowerCase().includes(q) ||
+                    b.author.toLowerCase().includes(q)
+                ).slice(0, 6).map(b => ({ ...b, source: 'local' }));
+            }
+        })();
+
+        const googlePromise = (async () => {
+            try {
+                const res = await fetch(`/api/books/google?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error('fail');
+                return await res.json();
+            } catch {
+                return [];
+            }
+        })();
+
+        const [localResults, googleResults] = await Promise.all([localPromise, googlePromise]);
+
+        // Merge: local first, then Google Books (deduplicate by title)
+        const seenTitles = new Set(localResults.map(b => b.title.toLowerCase()));
+        const uniqueGoogle = googleResults.filter(b => !seenTitles.has(b.title.toLowerCase()));
+        const merged = [...localResults, ...uniqueGoogle].slice(0, 8);
+        return merged;
     }
 
     function hl(text, q) {
@@ -541,45 +778,140 @@ document.addEventListener('DOMContentLoaded', () => {
         return text.replace(new RegExp(`(${esc})`, 'gi'), '<span class="suggestion-highlight">$1</span>');
     }
 
+    let selectedIndex = -1;
+
+    function renderPopularSearches() {
+        searchResults.innerHTML = `
+            <div class="popular-header">Popular Searches</div>
+            <div class="suggestion-item"><div class="suggestion-icon">📈</div><div class="suggestion-info"><div class="suggestion-title">Atomic Habits</div><div class="suggestion-author">James Clear</div></div><span class="genre-badge">Self-Help</span></div>
+            <div class="suggestion-item"><div class="suggestion-icon">📈</div><div class="suggestion-info"><div class="suggestion-title">Dune</div><div class="suggestion-author">Frank Herbert</div></div><span class="genre-badge">Sci-Fi</span></div>
+            <div class="suggestion-item"><div class="suggestion-icon">📈</div><div class="suggestion-info"><div class="suggestion-title">The Midnight Library</div><div class="suggestion-author">Matt Haig</div></div><span class="genre-badge">Contemporary</span></div>
+        `;
+        Array.from(searchResults.querySelectorAll('.suggestion-item')).forEach((div, i) => {
+            const title = div.querySelector('.suggestion-title').textContent;
+            div.addEventListener('click', () => {
+                searchResults.classList.add('hidden');
+                searchInput.value = title;
+                const book = mockBooks.find(b => b.title === title);
+                if (book) openBookModal(book);
+            });
+        });
+        selectedIndex = -1;
+    }
+
     function renderSuggestions(results, query) {
         searchResults.innerHTML = '';
+        selectedIndex = -1;
         if (!results.length) {
             searchResults.innerHTML = `<div class="no-results">No results found for "${query}"</div>`;
             return;
         }
-        results.forEach(book => {
+        results.forEach((book, index) => {
             const div = document.createElement('div');
             div.className = 'suggestion-item';
+            div.dataset.index = index;
+
+            // Cover thumbnail: use real cover image for Google Books, emoji for local
+            const coverHtml = book.coverImage
+                ? `<div class="suggestion-cover"><img src="${book.coverImage}" alt="${book.title}" loading="lazy"></div>`
+                : `<div class="suggestion-icon">📚</div>`;
+
+            // Source badge
+            const sourceBadge = book.source === 'google'
+                ? `<span class="source-badge google">Google Books</span>`
+                : `<span class="source-badge local">Library</span>`;
+
+            // Star rating for Google Books
+            const ratingHtml = book.rating
+                ? `<span class="suggestion-rating">⭐ ${book.rating}</span>`
+                : '';
+
             div.innerHTML = `
-                <div class="suggestion-icon">📚</div>
+                ${coverHtml}
                 <div class="suggestion-info">
                     <div class="suggestion-title">${hl(book.title, query)}</div>
-                    <div class="suggestion-author">${hl(book.author, query)}</div>
+                    <div class="suggestion-author">${hl(book.author, query)} ${ratingHtml}</div>
                 </div>
-                <span class="genre-badge">${book.genre}</span>`;
+                <div class="suggestion-meta">
+                    <span class="genre-badge">${book.genre || 'General'}</span>
+                    ${sourceBadge}
+                </div>`;
             div.addEventListener('click', () => {
                 searchResults.classList.add('hidden');
                 searchInput.value = book.title;
                 openBookModal(book);
             });
+            // Hover updates selected index
+            div.addEventListener('mouseenter', () => {
+                updateSelection(index);
+            });
             searchResults.appendChild(div);
         });
     }
 
+    function updateSelection(index) {
+        const items = searchResults.querySelectorAll('.suggestion-item');
+        if (!items.length) return;
+        items.forEach(el => el.classList.remove('selected'));
+        if (index >= 0 && index < items.length) {
+            items[index].classList.add('selected');
+            selectedIndex = index;
+            // Ensure visible in scroll if needed
+            items[index].scrollIntoView({ block: 'nearest' });
+        } else {
+            selectedIndex = -1;
+        }
+    }
+
     const handleSearch = debounce(async (e) => {
         const q = e.target.value.trim();
-        if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+        if (q.length === 0) { 
+            renderPopularSearches();
+            searchResults.classList.remove('hidden');
+            return; 
+        }
+        if (q.length < 2) { 
+            searchResults.classList.add('hidden'); 
+            return; 
+        }
         const results = await fetchSuggestions(q);
         renderSuggestions(results, q);
         searchResults.classList.remove('hidden');
-    }, 200);
+    }, 100);
 
     searchInput.addEventListener('input', handleSearch);
+    
+    // Keyboard navigation
+    searchInput.addEventListener('keydown', (e) => {
+        const items = searchResults.querySelectorAll('.suggestion-item');
+        if (searchResults.classList.contains('hidden') || !items.length) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            updateSelection(selectedIndex + 1 >= items.length ? 0 : selectedIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            updateSelection(selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (selectedIndex >= 0) {
+                items[selectedIndex].click();
+            } else if (items.length > 0) {
+                items[0].click(); // Default to first if none selected
+            }
+        }
+    });
+
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
     });
     searchInput.addEventListener('focus', () => {
-        if (searchInput.value.trim().length >= 2 && searchResults.children.length > 0) searchResults.classList.remove('hidden');
+        if (searchInput.value.trim().length === 0) {
+            renderPopularSearches();
+            searchResults.classList.remove('hidden');
+        } else if (searchInput.value.trim().length >= 2 && searchResults.children.length > 0) {
+            searchResults.classList.remove('hidden');
+        }
     });
 
     // ============================
@@ -587,42 +919,126 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================
     function openBookModal(book) {
         const coverEl = document.getElementById('book-cover');
-        const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
-        coverEl.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+        const coverIcon = coverEl.querySelector('.cover-icon');
+        
+        // Remove any previous cover image
+        const existingImg = coverEl.querySelector('.cover-img');
+        if (existingImg) existingImg.remove();
+
+        if (book.coverImage) {
+            // Google Books: show real cover image
+            coverEl.style.background = 'linear-gradient(135deg, #0f172a, #1e293b)';
+            if (coverIcon) coverIcon.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = book.coverImage.replace('zoom=1', 'zoom=2'); // Higher quality
+            img.alt = book.title;
+            img.className = 'cover-img';
+            coverEl.appendChild(img);
+        } else {
+            // Local book: gradient cover
+            const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
+            coverEl.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+            if (coverIcon) coverIcon.style.display = '';
+        }
 
         document.getElementById('book-title').textContent = book.title;
         document.getElementById('book-author').textContent = `by ${book.author}`;
-        document.getElementById('book-genre-badge').textContent = book.genre;
-        document.getElementById('book-description').textContent = book.description || 'A compelling read from our collection.';
+        document.getElementById('book-genre-badge').textContent = book.genre || 'General';
+        
+        // Description - strip HTML tags from Google Books descriptions
+        const rawDesc = book.description || 'A compelling read from our collection.';
+        const cleanDesc = rawDesc.replace(/<[^>]*>/g, '');
+        document.getElementById('book-description').textContent = cleanDesc.length > 400 
+            ? cleanDesc.substring(0, 400) + '...' 
+            : cleanDesc;
 
+        // Book metadata (rating, pages, publisher) for Google Books
+        const metaContainer = document.getElementById('book-meta');
+        if (metaContainer) metaContainer.remove();
+        
+        if (book.source === 'google') {
+            const metaDiv = document.createElement('div');
+            metaDiv.id = 'book-meta';
+            metaDiv.className = 'book-meta';
+            
+            const metaItems = [];
+            if (book.rating) {
+                const stars = '★'.repeat(Math.round(book.rating)) + '☆'.repeat(5 - Math.round(book.rating));
+                metaItems.push(`<span class="meta-item"><span class="meta-stars">${stars}</span> ${book.rating}/5${book.ratingsCount ? ` (${book.ratingsCount})` : ''}</span>`);
+            }
+            if (book.pageCount) {
+                metaItems.push(`<span class="meta-item">📄 ${book.pageCount} pages</span>`);
+            }
+            if (book.publishedDate) {
+                metaItems.push(`<span class="meta-item">📅 ${book.publishedDate}</span>`);
+            }
+            if (book.publisher) {
+                metaItems.push(`<span class="meta-item">🏢 ${book.publisher}</span>`);
+            }
+            
+            metaDiv.innerHTML = metaItems.join('');
+            const descEl = document.getElementById('book-description');
+            descEl.parentNode.insertBefore(metaDiv, descEl.nextSibling);
+        }
+
+        // Branch availability (only for local books)
+        const branchSection = document.querySelector('.branch-availability');
         const branchList = document.getElementById('branch-list');
         branchList.innerHTML = '';
-        const branches = book.branches || [{ name: 'Main Branch', copies: book.available_copies || 0 }];
-        branches.forEach(b => {
-            const item = document.createElement('div');
-            item.className = 'branch-item';
-            item.innerHTML = `
-                <span class="branch-name">${b.name}</span>
-                <span class="branch-copies ${b.copies > 0 ? 'available' : 'unavailable'}">${b.copies > 0 ? `${b.copies} available` : 'Unavailable'}</span>`;
-            branchList.appendChild(item);
-        });
 
+        if (book.source === 'google') {
+            branchSection.style.display = 'none';
+        } else {
+            branchSection.style.display = '';
+            const branches = book.branches || [{ name: 'Main Branch', copies: book.available_copies || 0 }];
+            branches.forEach(b => {
+                const item = document.createElement('div');
+                item.className = 'branch-item';
+                item.innerHTML = `
+                    <span class="branch-name">${b.name}</span>
+                    <span class="branch-copies ${b.copies > 0 ? 'available' : 'unavailable'}">${b.copies > 0 ? `${b.copies} available` : 'Unavailable'}</span>`;
+                branchList.appendChild(item);
+            });
+        }
+
+        // Action buttons
         const actionsEl = document.getElementById('book-actions');
         actionsEl.innerHTML = '';
-        const totalCopies = branches.reduce((s, b) => s + b.copies, 0);
 
-        if (totalCopies > 0) {
-            const btn = document.createElement('button');
-            btn.className = 'btn-borrow';
-            btn.textContent = '📖 Borrow This Book';
-            btn.addEventListener('click', () => handleBorrow(book));
-            actionsEl.appendChild(btn);
+        if (book.source === 'google') {
+            // Google Books: Preview link + Add to Wishlist
+            if (book.previewLink) {
+                const previewBtn = document.createElement('a');
+                previewBtn.href = book.previewLink;
+                previewBtn.target = '_blank';
+                previewBtn.className = 'btn-borrow';
+                previewBtn.textContent = '📖 Preview on Google Books';
+                previewBtn.style.textAlign = 'center';
+                previewBtn.style.textDecoration = 'none';
+                previewBtn.style.display = 'block';
+                actionsEl.appendChild(previewBtn);
+            }
+            const wishBtn = document.createElement('button');
+            wishBtn.className = 'btn-waitlist';
+            wishBtn.textContent = '❤️ Add to Wishlist';
+            wishBtn.addEventListener('click', () => handleWaitlist(book));
+            actionsEl.appendChild(wishBtn);
         } else {
-            const btn = document.createElement('button');
-            btn.className = 'btn-waitlist';
-            btn.textContent = '🔔 Join Waitlist';
-            btn.addEventListener('click', () => handleWaitlist(book));
-            actionsEl.appendChild(btn);
+            const branches = book.branches || [{ name: 'Main Branch', copies: book.available_copies || 0 }];
+            const totalCopies = branches.reduce((s, b) => s + b.copies, 0);
+            if (totalCopies > 0) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-borrow';
+                btn.textContent = '📖 Borrow This Book';
+                btn.addEventListener('click', () => handleBorrow(book));
+                actionsEl.appendChild(btn);
+            } else {
+                const btn = document.createElement('button');
+                btn.className = 'btn-waitlist';
+                btn.textContent = '🔔 Join Waitlist';
+                btn.addEventListener('click', () => handleWaitlist(book));
+                actionsEl.appendChild(btn);
+            }
         }
 
         bookModal.classList.remove('hidden');
@@ -654,7 +1070,18 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`You've already borrowed "${book.title}"!`, 'warning');
             return;
         }
-        data.borrowed.push({ id: book.id, title: book.title, author: book.author, coverGradient: book.coverGradient });
+        const borrowDate = new Date();
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 14); // 2 weeks to return a book
+
+        data.borrowed.push({ 
+            id: book.id, 
+            title: book.title, 
+            author: book.author, 
+            coverGradient: book.coverGradient,
+            borrowDate: borrowDate.toISOString(),
+            dueDate: dueDate.toISOString()
+        });
         saveUserData(user.email, data);
         closeBookModal();
         showToast(`"${book.title}" reserved! 📚 Pick it up at your nearest branch.`, 'success');
@@ -707,4 +1134,94 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.3 });
 
     statCards.forEach(c => observer.observe(c));
+
+    // ============================
+    // Chatbot Frontend Logic
+    // ============================
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatWindow = document.getElementById('chat-window');
+    const chatClose = document.getElementById('chat-close');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInputForm = document.getElementById('chat-input-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+
+    let chatHistory = []; // Local history for the session
+
+    chatToggle.addEventListener('click', () => {
+        chatWindow.classList.toggle('hidden');
+        if (!chatWindow.classList.contains('hidden')) {
+            chatInput.focus();
+        }
+    });
+
+    chatClose.addEventListener('click', () => {
+        chatWindow.classList.add('hidden');
+    });
+
+    function addMessage(content, role) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${role}`;
+        messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function handleChat(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        // Clear input and disable button
+        chatInput.value = '';
+        chatInput.disabled = true;
+        chatSend.disabled = true;
+
+        // Add user message to UI
+        addMessage(message, 'user');
+
+        // Add typing indicator
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.textContent = 'FastLib Assistant is thinking...';
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: chatHistory
+                }),
+            });
+
+            const data = await response.json();
+
+            // Remove typing indicator
+            typingDiv.remove();
+
+            if (data.response) {
+                addMessage(data.response, 'ai');
+                // Persist only clean history (simplified for Gemini SDK)
+                chatHistory.push({ role: "user", parts: [{ text: message }] });
+                chatHistory.push({ role: "model", parts: [{ text: data.response }] });
+            } else {
+                addMessage(data.error || "I'm sorry, I'm having trouble connecting right now. Please try again later.", 'ai');
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            typingDiv.remove();
+            addMessage("Unable to reach the server. Please check your connection and try again.", 'ai');
+        } finally {
+            chatInput.disabled = false;
+            chatSend.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    chatInputForm.addEventListener('submit', handleChat);
 });

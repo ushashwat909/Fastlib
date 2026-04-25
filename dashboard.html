@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | FastLib</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="dashboard-body">
+
+    <!-- Animated Background -->
+    <div class="bg-shape shape1"></div>
+    <div class="bg-shape shape2"></div>
+    <div class="bg-shape shape3"></div>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <div class="logo" id="logo-home">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">FastLib</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/index.html" class="nav-link">Home / Search</a>
+                <!-- Logged-in state (Dashboard assumes logged in) -->
+                <div id="user-nav">
+                    <div class="user-menu" id="user-menu-toggle">
+                        <div class="user-avatar" id="user-avatar-nav">U</div>
+                        <span class="user-name" id="user-name-nav">User</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="user-dropdown hidden" id="user-dropdown">
+                        <a href="/index.html" class="dropdown-item">🔍 Go to Search</a>
+                        <hr class="dropdown-divider">
+                        <a href="#" class="dropdown-item danger" id="signout-btn">🚪 Sign Out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== DASHBOARD CONTAINER ===== -->
+    <main class="dashboard-container">
+        
+        <div class="dashboard-header">
+            <div class="dashboard-title-area">
+                <h1 id="dash-greeting">Welcome back!</h1>
+                <p class="dashboard-subtitle">Here is an overview of your FastLib activity.</p>
+            </div>
+            <div class="user-stats-pill">
+                <div class="stat-item">
+                    <span class="val" id="stat-borrowed">0</span>
+                    <span class="lbl">Borrowing</span>
+                </div>
+                <div class="stat-item">
+                    <span class="val" id="stat-history">0</span>
+                    <span class="lbl">Returned</span>
+                </div>
+                <div class="stat-item">
+                    <span class="val" id="stat-waitlist">0</span>
+                    <span class="lbl">Waitlist</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tabs -->
+        <div class="dashboard-tabs">
+            <button class="d-tab active" data-tab="borrowed">📚 Currently Borrowing</button>
+            <button class="d-tab" data-tab="history">⏱️ History</button>
+            <button class="d-tab" data-tab="waitlist">🔔 Active Waitlists</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="tab-content-borrowed" class="tab-pane">
+            <div class="book-grid" id="grid-borrowed"></div>
+        </div>
+
+        <div id="tab-content-history" class="tab-pane hidden">
+            <div class="book-grid" id="grid-history"></div>
+        </div>
+
+        <div id="tab-content-waitlist" class="tab-pane hidden">
+            <div class="book-grid" id="grid-waitlist"></div>
+        </div>
+
+    </main>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
