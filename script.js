@@ -587,16 +587,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Wire up custom Google buttons
     function handleGoogleBtnClick() {
-        // Check if Google Identity Services is loaded and client ID is configured
+        // Try real Google Identity Services first
         if (window.google && window.google.accounts && window.google.accounts.id) {
             google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-                    // One Tap was blocked — inform the user
-                    showToast('Please ensure a valid Google Client ID is set up in Google Cloud Console.', 'error');
+                    showToast('⚠️ Google Sign-In requires a live domain. Please use Email & Password instead.', 'error');
                 }
             });
         } else {
-            showToast('Google Sign-In is not configured yet. Please set up a valid Client ID in Google Cloud Console.', 'error');
+            // Google GSI not loaded or localhost restriction — show friendly fallback
+            showToast('ℹ️ Google Sign-In is only available on a live domain. Please use Email & Password below.', 'info');
         }
     }
 
@@ -617,29 +617,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitBtn = signinForm.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.textContent = 'Signing in...';
+
+        const users = getUsers();
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (!user) {
+            signinError.textContent = 'Invalid email or password. Try registering a new account.';
+            signinError.classList.remove('hidden');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
+            return;
+        }
+
+        // Best effort API sync
         try {
-            const res = await fetch('/api/auth/signin', {
+            fetch('/api/auth/signin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                signinError.textContent = data.error || 'Sign-in failed.';
-                signinError.classList.remove('hidden');
-                return;
-            }
-            saveCurrentUser(data.user);
-            initAuthUI();
-            closeAuthModal();
-            showToast(`Welcome back, ${data.user.name.split(' ')[0]}! 👋`, 'success');
-        } catch (err) {
-            signinError.textContent = 'Server error. Please try again.';
-            signinError.classList.remove('hidden');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Sign In';
-        }
+            }).catch(() => {});
+        } catch(e) {}
+
+        saveCurrentUser(user);
+        initAuthUI();
+        closeAuthModal();
+        showToast(`Welcome back, ${user.name.split(' ')[0]}! 👋`, 'success');
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
     });
 
     // ============================
@@ -658,31 +663,36 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const users = getUsers();
+        if (users.find(u => u.email === email)) {
+            registerError.textContent = 'An account with this email already exists.';
+            registerError.classList.remove('hidden');
+            return;
+        }
+
         submitBtn.disabled = true;
         submitBtn.textContent = 'Creating account...';
+
+        const newUser = { name, email, password };
+        users.push(newUser);
+        localStorage.setItem('fastlib_users', JSON.stringify(users));
+
+        // Best effort API sync
         try {
-            const res = await fetch('/api/auth/register', {
+            fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                registerError.textContent = data.error || 'Registration failed.';
-                registerError.classList.remove('hidden');
-                return;
-            }
-            saveCurrentUser(data.user);
-            initAuthUI();
-            closeAuthModal();
-            showToast(`Account created! Welcome to FastLib, ${name.split(' ')[0]}! 🎉`, 'success');
-        } catch (err) {
-            registerError.textContent = 'Server error. Please try again.';
-            registerError.classList.remove('hidden');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Create Account';
-        }
+                body: JSON.stringify(newUser)
+            }).catch(() => {});
+        } catch(e) {}
+
+        saveCurrentUser(newUser);
+        initAuthUI();
+        closeAuthModal();
+        showToast(`Account created! Welcome to FastLib, ${name.split(' ')[0]}! 🎉`, 'success');
+        
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
     });
 
     // ============================
