@@ -42,11 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabViews = document.querySelectorAll('.tab-view');
 
     function switchTab(hash) {
-        if (!hash) hash = '#home';
+        // Normalize hash
+        if (!hash || hash === '#' || hash === '#home') {
+            hash = '#home';
+        }
         
-        // Update nav links
+        // Update nav links active state
         navLinks.forEach(link => {
-            if (link.getAttribute('href') === hash) {
+            const href = link.getAttribute('href');
+            if (href === hash) {
                 link.classList.add('active');
             } else {
                 link.classList.remove('active');
@@ -54,32 +58,199 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Show correct view
-        const viewId = hash.substring(1) + '-view';
+        const targetViewId = hash.substring(1) + '-view';
         tabViews.forEach(view => {
-            if (view.id === viewId) {
+            if (view.id === targetViewId) {
                 view.classList.remove('hidden');
             } else {
                 view.classList.add('hidden');
             }
         });
 
+        // Scroll to top for better UX
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         // Trigger data fetch if needed
         if (hash === '#books') fetchBooksTab();
         if (hash === '#genres') fetchGenresTab();
         if (hash === '#authors') fetchAuthorsTab();
+        if (hash === '#poetry') fetchPoetryTab();
     }
 
     // Handle hash change
     window.addEventListener('hashchange', () => switchTab(window.location.hash));
     
-    // Initial load
-    if (window.location.hash) {
-        switchTab(window.location.hash);
+    // Explicit click handling for nav links to handle clicks on the same tab
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href.startsWith('#')) {
+                // If already on this hash, manually trigger switchTab for the scrolling/sync effect
+                if (window.location.hash === href) {
+                    switchTab(href);
+                }
+            }
+        });
+    });
+
+    // Logo click
+    const logoHome = document.getElementById('logo-home');
+    if (logoHome) {
+        logoHome.addEventListener('click', () => {
+            if (window.location.hash === '#home') {
+                switchTab('#home');
+            } else {
+                window.location.hash = '#home';
+            }
+        });
     }
+    
+    // Initial load
+    switchTab(window.location.hash);
 
     // ============================
     // Fetch Data for Tabs
     // ============================
+    async function fetchPoetryTab() {
+        const feed = document.getElementById('poetry-feed');
+        try {
+            const res = await fetch('/api/poetry');
+            const poems = await res.json();
+            feed.innerHTML = '';
+            if (poems.length === 0) {
+                feed.innerHTML = '<div class="loading-state">Be the first to share a poem!</div>';
+                return;
+            }
+            poems.forEach(poem => {
+                const div = document.createElement('div');
+                div.className = `poem-card ${poem.isExternal ? 'classic' : 'community'}`;
+                
+                const likesCount = poem.likes || 0;
+                const comments = poem.comments || [];
+                
+                let commentsHtml = '<div class="poem-comments-list">';
+                comments.forEach(c => {
+                    commentsHtml += `<div class="poem-comment"><strong>${c.user}</strong>: ${c.text} <span class="comment-date">${c.date}</span></div>`;
+                });
+                commentsHtml += '</div>';
+
+                div.innerHTML = `
+                    <div class="poem-header-row">
+                        <span class="poem-badge ${poem.isExternal ? 'badge-classic' : 'badge-community'}">
+                            ${poem.isExternal ? '📜 Classic' : '✨ Community'}
+                        </span>
+                        <div class="poem-date">${poem.date}</div>
+                    </div>
+                    <div class="poem-header">
+                        <h3 class="poem-title">${poem.title}</h3>
+                        <div class="poem-author">by ${poem.author}</div>
+                    </div>
+                    <div class="poem-content">${poem.content}</div>
+                    <div class="poem-footer">
+                        <div class="poem-decor">🖋️</div>
+                        <div class="poem-actions">
+                            <button class="btn-like-poem" data-id="${poem.id}">❤️ <span class="like-count">${likesCount}</span></button>
+                            <button class="btn-comment-toggle">💬 ${comments.length}</button>
+                        </div>
+                    </div>
+                    <div class="poem-comments-section hidden">
+                        ${commentsHtml}
+                        <form class="poem-comment-form" data-id="${poem.id}">
+                            <input type="text" placeholder="Add a comment..." required class="comment-input" />
+                            <button type="submit" class="btn-submit-comment">Post</button>
+                        </form>
+                    </div>
+                `;
+                
+                // Add event listeners
+                const likeBtn = div.querySelector('.btn-like-poem');
+                const commentToggle = div.querySelector('.btn-comment-toggle');
+                const commentSection = div.querySelector('.poem-comments-section');
+                const commentForm = div.querySelector('.poem-comment-form');
+
+                likeBtn.addEventListener('click', async () => {
+                    try {
+                        const res = await fetch(`/api/poetry/${poem.id}/like`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ poem })
+                        });
+                        if (res.ok) {
+                            const updated = await res.json();
+                            likeBtn.querySelector('.like-count').textContent = updated.likes;
+                            poem.likes = updated.likes;
+                            likeBtn.classList.add('liked');
+                        }
+                    } catch (e) { console.error('Error liking poem:', e); }
+                });
+
+                commentToggle.addEventListener('click', () => {
+                    commentSection.classList.toggle('hidden');
+                });
+
+                commentForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const input = commentForm.querySelector('.comment-input');
+                    const text = input.value.trim();
+                    if (!text) return;
+
+                    const userObj = getCurrentUser();
+                    const user = userObj ? userObj.name : 'Guest';
+
+                    try {
+                        const res = await fetch(`/api/poetry/${poem.id}/comment`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text, user, poemData: poem })
+                        });
+                        if (res.ok) {
+                            fetchPoetryTab();
+                        }
+                    } catch (e) { console.error('Error commenting:', e); }
+                });
+
+                feed.appendChild(div);
+            });
+        } catch (e) {
+            feed.innerHTML = '<div class="loading-state">Failed to load poems.</div>';
+        }
+    }
+
+    // Poem Form Logic
+    const poemForm = document.getElementById('poem-form');
+    if (poemForm) {
+        poemForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = poemForm.querySelector('button');
+            const title = document.getElementById('poem-title').value;
+            const author = document.getElementById('poem-author').value;
+            const content = document.getElementById('poem-content').value;
+
+            btn.disabled = true;
+            btn.textContent = 'Sharing...';
+
+            try {
+                const res = await fetch('/api/poetry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, author, content })
+                });
+                if (res.ok) {
+                    showToast('Your poem has been shared! ✨', 'success');
+                    poemForm.reset();
+                    fetchPoetryTab();
+                } else {
+                    showToast('Failed to share poem. Please try again.', 'error');
+                }
+            } catch (err) {
+                showToast('Server error. Please try again later.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✨ Share with Community';
+            }
+        });
+    }
+
     async function fetchBooksTab() {
         const container = document.getElementById('books-container');
         if (container.dataset.loaded) return; // Prevent refetching
@@ -92,17 +263,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.className = 'book-card';
                 div.innerHTML = `
                     <div class="book-cover">
+                        ${book.coverImage ? `<img src="${book.coverImage}" alt="Cover">` : `
                         <div class="book-placeholder">
                             <span class="icon">📚</span>
                             <span class="genre">${book.genre}</span>
-                        </div>
+                        </div>`}
                     </div>
                     <div class="book-info">
                         <h3 class="book-title">${book.title}</h3>
                         <p class="book-author">${book.author}</p>
                     </div>
                 `;
-                div.addEventListener('click', () => openBookModal(book.id));
+                book.source = 'google';
+                div.addEventListener('click', () => openBookModal(book));
                 container.appendChild(div);
             });
             container.dataset.loaded = "true";
@@ -127,7 +300,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 div.addEventListener('click', () => {
                     window.location.hash = '#books';
-                    fetchBooksByQuery(`subject:${genre.genre}`);
+                    const subjectQuery = genre.genre.toLowerCase() === 'non-fiction' ? 'nonfiction' : genre.genre;
+                    fetchBooksByQuery(`subject:${subjectQuery}`);
                 });
                 container.appendChild(div);
             });
@@ -190,20 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="book-author">${book.author}</p>
                     </div>
                 `;
-                div.addEventListener('click', () => openBookModal(book.id));
+                book.source = 'google';
+                div.addEventListener('click', () => openBookModal(book));
                 container.appendChild(div);
             });
         } catch (e) {
             container.innerHTML = '<div class="loading-state">Failed to load books.</div>';
         }
-    }
-
-    // Logo click to home
-    const logoHome = document.getElementById('logo-home');
-    if (logoHome) {
-        logoHome.addEventListener('click', () => {
-            window.location.hash = '#home';
-        });
     }
 
     // Curated Collections Click Handlers
@@ -216,10 +383,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
-    setupCollectionHandler('collection-awards', 'pulitzer OR booker OR "nobel prize"');
-    setupCollectionHandler('collection-nyt', '"new york times bestseller"');
-    setupCollectionHandler('collection-mind', 'subject:science OR subject:philosophy OR subject:psychology');
-    setupCollectionHandler('collection-staff', 'subject:fiction bestseller');
+    setupCollectionHandler('collection-awards', 'pulitzer winner OR booker prize');
+    setupCollectionHandler('collection-nyt', 'new york times bestseller');
+    setupCollectionHandler('collection-mind', 'science philosophy');
+    setupCollectionHandler('collection-staff', 'bestselling fiction 2024');
+
+    // Home Page Categories Click Handlers
+    setupCollectionHandler('cat-fiction', 'subject:fiction');
+    setupCollectionHandler('cat-nonfiction', 'subject:nonfiction');
+    setupCollectionHandler('cat-science', 'science technology');
+    setupCollectionHandler('cat-selfhelp', 'self-help personal growth');
+    setupCollectionHandler('cat-history', 'history biography');
+    
+    const catMore = document.getElementById('cat-more');
+    if (catMore) {
+        catMore.addEventListener('click', () => {
+            window.location.hash = '#genres';
+        });
+    }
+
+    const btnBanner = document.querySelector('.btn-banner');
+    if (btnBanner) {
+        btnBanner.addEventListener('click', () => {
+            window.location.hash = '#books';
+        });
+    }
+
+    const footerSignin = document.getElementById('footer-signin');
+    if (footerSignin) {
+        footerSignin.addEventListener('click', (e) => {
+            e.preventDefault();
+            openAuthModal('signin');
+        });
+    }
+
+    // Trending Tags Click Handlers
+    document.querySelectorAll('.trending-tag').forEach(tag => {
+        tag.addEventListener('click', () => {
+            const query = tag.textContent.trim();
+            window.location.hash = '#books';
+            fetchBooksByQuery(query, 40);
+        });
+        // Make them look clickable
+        tag.style.cursor = 'pointer';
+    });
 
     // Auth elements
     const authModal = document.getElementById('auth-modal');
@@ -231,8 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const userDropdown = document.getElementById('user-dropdown');
     const signinForm = document.getElementById('signin-form');
     const registerForm = document.getElementById('register-form');
-    const tabSignin = document.getElementById('tab-signin');
-    const tabRegister = document.getElementById('tab-register');
+    const signinView = document.getElementById('signin-view');
+    const registerView = document.getElementById('register-view');
     const signoutBtn = document.getElementById('signout-btn');
     const signinError = document.getElementById('signin-error');
     const registerError = document.getElementById('register-error');
@@ -323,53 +530,127 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================
     function switchAuthTab(tab) {
         if (tab === 'signin') {
-            tabSignin.classList.add('active');
-            tabRegister.classList.remove('active');
-            signinForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
+            signinView.classList.remove('hidden');
+            registerView.classList.add('hidden');
         } else {
-            tabRegister.classList.add('active');
-            tabSignin.classList.remove('active');
-            registerForm.classList.remove('hidden');
-            signinForm.classList.add('hidden');
+            registerView.classList.remove('hidden');
+            signinView.classList.add('hidden');
         }
     }
 
-    tabSignin.addEventListener('click', () => switchAuthTab('signin'));
-    tabRegister.addEventListener('click', () => switchAuthTab('register'));
+    document.getElementById('switch-to-register').addEventListener('click', (e) => { e.preventDefault(); switchAuthTab('register'); });
+    document.getElementById('switch-to-signin').addEventListener('click', (e) => { e.preventDefault(); switchAuthTab('signin'); });
+
+    // Password Toggle functionality
+    document.querySelectorAll('.pw-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = btn.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        });
+    });
+
+    // Real Google Identity Services Callback
+    window.handleGoogleCredentialResponse = (response) => {
+        // Decode JWT token
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        
+        // Payload contains real Google user data
+        const googleUser = {
+            name: payload.name,
+            email: payload.email,
+            picture: payload.picture,
+            password: 'google_oauth_user_' + payload.sub // Placeholder password for local state
+        };
+
+        const users = getUsers();
+        if (!users.find(u => u.email === googleUser.email)) {
+            users.push(googleUser);
+            localStorage.setItem('fastlib_users', JSON.stringify(users));
+        }
+        saveCurrentUser(googleUser);
+        initAuthUI();
+        closeAuthModal();
+        showToast('Signed in with Google! 🎉', 'success');
+    };
+
+    // Wire up custom Google buttons
+    function handleGoogleBtnClick() {
+        // Check if Google Identity Services is loaded and client ID is configured
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // One Tap was blocked — inform the user
+                    showToast('Please ensure a valid Google Client ID is set up in Google Cloud Console.', 'error');
+                }
+            });
+        } else {
+            showToast('Google Sign-In is not configured yet. Please set up a valid Client ID in Google Cloud Console.', 'error');
+        }
+    }
+
+    const googleSigninBtn = document.getElementById('google-signin-btn');
+    const googleRegisterBtn = document.getElementById('google-register-btn');
+    if (googleSigninBtn) googleSigninBtn.addEventListener('click', handleGoogleBtnClick);
+    if (googleRegisterBtn) googleRegisterBtn.addEventListener('click', handleGoogleBtnClick);
     document.getElementById('switch-to-register').addEventListener('click', (e) => { e.preventDefault(); switchAuthTab('register'); });
     document.getElementById('switch-to-signin').addEventListener('click', (e) => { e.preventDefault(); switchAuthTab('signin'); });
 
     // ============================
     // Sign In
     // ============================
-    signinForm.addEventListener('submit', (e) => {
+    signinForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('signin-email').value.trim().toLowerCase();
         const password = document.getElementById('signin-password').value;
-        const users = getUsers();
-        const user = users.find(u => u.email === email && u.password === password);
-
-        if (!user) {
-            signinError.textContent = 'Invalid email or password. Try registering a new account.';
+        const submitBtn = signinForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+        try {
+            const res = await fetch('/api/auth/signin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                signinError.textContent = data.error || 'Sign-in failed.';
+                signinError.classList.remove('hidden');
+                return;
+            }
+            saveCurrentUser(data.user);
+            initAuthUI();
+            closeAuthModal();
+            showToast(`Welcome back, ${data.user.name.split(' ')[0]}! 👋`, 'success');
+        } catch (err) {
+            signinError.textContent = 'Server error. Please try again.';
             signinError.classList.remove('hidden');
-            return;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign In';
         }
-
-        saveCurrentUser(user);
-        initAuthUI();
-        closeAuthModal();
-        showToast(`Welcome back, ${user.name.split(' ')[0]}! 👋`, 'success');
     });
 
     // ============================
     // Register
     // ============================
-    registerForm.addEventListener('submit', (e) => {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('reg-name').value.trim();
         const email = document.getElementById('reg-email').value.trim().toLowerCase();
         const password = document.getElementById('reg-password').value;
+        const submitBtn = registerForm.querySelector('button[type="submit"]');
 
         if (password.length < 6) {
             registerError.textContent = 'Password must be at least 6 characters.';
@@ -377,20 +658,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const users = getUsers();
-        if (users.find(u => u.email === email)) {
-            registerError.textContent = 'An account with this email already exists.';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                registerError.textContent = data.error || 'Registration failed.';
+                registerError.classList.remove('hidden');
+                return;
+            }
+            saveCurrentUser(data.user);
+            initAuthUI();
+            closeAuthModal();
+            showToast(`Account created! Welcome to FastLib, ${name.split(' ')[0]}! 🎉`, 'success');
+        } catch (err) {
+            registerError.textContent = 'Server error. Please try again.';
             registerError.classList.remove('hidden');
-            return;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
         }
-
-        const newUser = { name, email, password };
-        users.push(newUser);
-        localStorage.setItem('fastlib_users', JSON.stringify(users));
-        saveCurrentUser(newUser);
-        initAuthUI();
-        closeAuthModal();
-        showToast(`Account created! Welcome to FastLib, ${name.split(' ')[0]}! 🎉`, 'success');
     });
 
     // ============================
@@ -435,10 +727,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('profile-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        userDropdown.classList.add('hidden');
-        openProfileModal();
-    });
+    e.preventDefault();
+    userDropdown.classList.add('hidden');
+    window.location.href = 'profile.html';
+});
 
     // ============================
     // Profile Settings Modal
@@ -626,8 +918,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = document.createElement('div');
                 item.className = 'library-item';
                 const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
+                const coverHtml = book.coverImage 
+                    ? `<div class="library-item-icon"><img src="${book.coverImage}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;"></div>`
+                    : `<div class="library-item-icon" style="background: linear-gradient(135deg, ${c1}, ${c2})">📚</div>`;
                 item.innerHTML = `
-                    <div class="library-item-icon" style="background: linear-gradient(135deg, ${c1}, ${c2})">📚</div>
+                    ${coverHtml}
                     <div class="library-item-info">
                         <div class="library-item-title">${book.title}</div>
                         <div class="library-item-author">by ${book.author}</div>
@@ -656,11 +951,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================
     // Smooth Scroll / Nav
     // ============================
-    document.getElementById('logo-home').addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    // Logo-home is already handled in the header section of this script
 
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
+    document.querySelectorAll('a[href^="#"]:not(.nav-link)').forEach(a => {
         a.addEventListener('click', (e) => {
             const href = a.getAttribute('href');
             if (href === '#' || href === '') return;
@@ -705,7 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 10, title: "Educated", author: "Tara Westover", genre: "Memoir", description: "Born to survivalists, Tara Westover never attended school. Through sheer determination, she taught herself and eventually earned a PhD from Cambridge University.", coverGradient: ["#78350f", "#d97706"], branches: [{ name: "Central Library", copies: 0 }, { name: "Westside Branch", copies: 0 }, { name: "Downtown Hub", copies: 0 }] },
         { id: 11, title: "Harry Potter and the Sorcerer's Stone", author: "J.K. Rowling", genre: "Fantasy", description: "An orphaned boy discovers he's a wizard and enters Hogwarts School of Witchcraft and Wizardry, where he uncovers the truth about his parents and a dark sorcerer.", coverGradient: ["#4a1a6b", "#9333ea"], branches: [{ name: "Central Library", copies: 6 }, { name: "Westside Branch", copies: 5 }, { name: "Downtown Hub", copies: 4 }] },
         { id: 12, title: "Haruki Murakami Selection", author: "Haruki Murakami", genre: "Fiction", description: "A curated anthology of Murakami's finest short stories, blending magical realism with deep introspection on loneliness, music, and the surreal nature of everyday life.", coverGradient: ["#831843", "#ec4899"], branches: [{ name: "Central Library", copies: 2 }, { name: "Eastside Branch", copies: 2 }, { name: "Downtown Hub", copies: 0 }] },
-        { id: 13, title: "Harmony of the Spheres", author: "Various Authors", genre: "Musicology", description: "An exploration of the mathematical and philosophical connections between music and the cosmos, from Pythagoras through modern astrophysics.", coverGradient: ["#1e293b", "#64748b"], branches: [{ name: "Central Library", copies: 0 }, { name: "Eastside Branch", copies: 0 }] }
+        { id: 13, title: "Harmony of the Spheres", author: "Various Authors", genre: "Musicology", description: "An exploration of the mathematical and philosophical connections between music and the cosmos, from Pythagoras through modern astrophysics.", coverGradient: ["#1e293b", "#64748b"], branches: [{ name: "Central Library", copies: 0 }, { name: "Eastside Branch", copies: 0 }] },
+        { id: 14, title: "The Psychology of Money", author: "Morgan Housel", genre: "Finance", description: "Timeless lessons on wealth, greed, and happiness. Housel shares 19 short stories exploring the strange ways people think about money and teaches you how to make better sense of one of life's most important topics.", coverImage: "https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg", branches: [{ name: "Central Library", copies: 5 }, { name: "Eastside Branch", copies: 3 }, { name: "Downtown Hub", copies: 2 }] }
     ];
 
     // ============================
@@ -914,6 +1208,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Full Search Action (Search Button or Enter)
+    const performFullSearch = () => {
+        const query = searchInput.value.trim();
+        if (query.length < 2) {
+            showToast('Please enter at least 2 characters.', 'info');
+            return;
+        }
+        searchResults.classList.add('hidden');
+        window.location.hash = '#books';
+        fetchBooksByQuery(query, 40);
+    };
+
+    const searchBtn = document.querySelector('.btn-search');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performFullSearch);
+    }
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && selectedIndex === -1) {
+            performFullSearch();
+        }
+    });
+
     // ============================
     // Book Detail Modal
     // ============================
@@ -930,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             coverEl.style.background = 'linear-gradient(135deg, #0f172a, #1e293b)';
             if (coverIcon) coverIcon.style.display = 'none';
             const img = document.createElement('img');
-            img.src = book.coverImage.replace('zoom=1', 'zoom=2'); // Higher quality
+            img.src = book.coverImage;
             img.alt = book.title;
             img.className = 'cover-img';
             coverEl.appendChild(img);
@@ -1079,6 +1396,7 @@ document.addEventListener('DOMContentLoaded', () => {
             title: book.title, 
             author: book.author, 
             coverGradient: book.coverGradient,
+            coverImage: book.coverImage,
             borrowDate: borrowDate.toISOString(),
             dueDate: dueDate.toISOString()
         });
@@ -1101,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`You're already on the waitlist for "${book.title}".`, 'warning');
             return;
         }
-        data.waitlist.push({ id: book.id, title: book.title, author: book.author, coverGradient: book.coverGradient });
+        data.waitlist.push({ id: book.id, title: book.title, author: book.author, coverGradient: book.coverGradient, coverImage: book.coverImage });
         saveUserData(user.email, data);
         closeBookModal();
         showToast(`Added to waitlist for "${book.title}" 🔔 We'll notify you when it's available!`, 'success');
@@ -1224,4 +1542,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     chatInputForm.addEventListener('submit', handleChat);
+    
+    // Newsletter Logic
+    const newsletterForm = document.getElementById('newsletter-form');
+    if (newsletterForm) {
+        newsletterForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email').value;
+            showToast(`Thanks for subscribing with ${email}! 🚀`, 'success');
+            newsletterForm.reset();
+        });
+    }
+    // Hero Section Buttons
+    const heroReadNowBtn = document.querySelector('.hero-main-book-card .btn-read-now');
+    const heroWishlistLink = document.querySelector('.hero-main-book-card .add-wishlist-link');
+
+    if (heroReadNowBtn) {
+        heroReadNowBtn.addEventListener('click', () => {
+            const book = mockBooks.find(b => b.title === "The Psychology of Money");
+            if (book) openBookModal(book);
+        });
+    }
+
+    if (heroWishlistLink) {
+        heroWishlistLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const book = mockBooks.find(b => b.title === "The Psychology of Money");
+            if (book) handleWaitlist(book);
+        });
+    }
 });

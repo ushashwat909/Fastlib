@@ -11,7 +11,15 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
+    <!-- Google Identity Services Initialization -->
+    <!-- TODO: Replace data-client_id with your real Client ID from https://console.cloud.google.com/ -->
+    <div id="g_id_onload"
+         data-client_id="816724434729-hg9i8gqv7f8ngruag9jo4bb92ma291dr.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleGoogleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
     <!-- ===== NAVBAR ===== -->
     <nav class="navbar">
         <div class="container navbar-inner">
@@ -26,6 +34,7 @@
                 <a href="#genres" class="nav-link">Genres</a>
                 <a href="#authors" class="nav-link">Authors</a>
                 <a href="#collections" class="nav-link">Collections</a>
+                <a href="#poetry" class="nav-link">Poetry</a>
                 <a href="#about" class="nav-link">About</a>
             </div>
 
@@ -99,8 +108,62 @@
             </div>
 
             <div class="hero-right">
-                <div class="hero-visual">
-                    <img src="hero.png" alt="FastLib Hero" class="hero-img">
+                <div class="hero-visual-container">
+                    <!-- Main Book Card -->
+                    <div class="hero-main-book-card floating">
+                        <div class="book-card-inner">
+                            <div class="book-card-content">
+                                <h3 class="feature-book-title">The Psychology of Money</h3>
+                                <p class="feature-book-author">Morgan Housel</p>
+                                <div class="feature-book-rating">
+                                    <span class="stars">★★★★★</span>
+                                    <span class="rating-val">4.8</span>
+                                </div>
+                                <button class="btn-read-now">Read Now</button>
+                                <a href="#" class="add-wishlist-link">+ Add to Wishlist</a>
+                            </div>
+                            <div class="book-card-cover">
+                                <img src="https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg" alt="Psychology of Money">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Feature Cards -->
+                    <div class="floating-card f-search floating-alt">
+                        <div class="f-card-icon purple">⚡</div>
+                        <div class="f-card-text">
+                            <strong>Instant Search</strong>
+                            <span>Find books in ms</span>
+                        </div>
+                    </div>
+
+                    <div class="floating-card f-online floating">
+                        <div class="f-card-icon blue">📖</div>
+                        <div class="f-card-text">
+                            <strong>Read Online</strong>
+                            <span>No downloads</span>
+                        </div>
+                    </div>
+
+                    <div class="floating-card f-wishlist floating-alt">
+                        <div class="f-card-icon red">❤️</div>
+                        <div class="f-card-text">
+                            <strong>Your Wishlist</strong>
+                            <span>Save books you love</span>
+                        </div>
+                    </div>
+
+                    <div class="floating-card f-collection floating">
+                        <div class="f-card-icon indigo">📚</div>
+                        <div class="f-card-text">
+                            <strong>Huge Collection</strong>
+                            <span>100K+ and growing</span>
+                        </div>
+                    </div>
+
+                    <!-- Decorative elements -->
+                    <div class="hero-glow"></div>
+                    <div class="magnifying-glass">🔍</div>
                 </div>
             </div>
         </div>
@@ -150,35 +213,35 @@
         <div class="container">
             <div class="section-header-row">
                 <h2 class="section-title-sm">Browse by Categories</h2>
-                <a href="#" class="view-all">View all</a>
+                <a href="#genres" class="nav-link view-all">View all</a>
             </div>
             <div class="categories-grid">
-                <div class="category-card">
+                <div class="category-card" id="cat-fiction">
                     <div class="category-icon bg-purple">📖</div>
                     <h3 class="category-name">Fiction</h3>
                     <p class="category-count">25,000+ books</p>
                 </div>
-                <div class="category-card">
+                <div class="category-card" id="cat-nonfiction">
                     <div class="category-icon bg-green">📘</div>
                     <h3 class="category-name">Non-Fiction</h3>
                     <p class="category-count">18,000+ books</p>
                 </div>
-                <div class="category-card">
+                <div class="category-card" id="cat-science">
                     <div class="category-icon bg-blue">🔬</div>
                     <h3 class="category-name">Science</h3>
                     <p class="category-count">12,000+ books</p>
                 </div>
-                <div class="category-card">
+                <div class="category-card" id="cat-selfhelp">
                     <div class="category-icon bg-teal">🌱</div>
                     <h3 class="category-name">Self-Help</h3>
                     <p class="category-count">8,000+ books</p>
                 </div>
-                <div class="category-card">
+                <div class="category-card" id="cat-history">
                     <div class="category-icon bg-orange">🏛️</div>
                     <h3 class="category-name">History</h3>
                     <p class="category-count">7,000+ books</p>
                 </div>
-                <div class="category-card">
+                <div class="category-card" id="cat-more">
                     <div class="category-icon bg-gray">•••</div>
                     <h3 class="category-name">More</h3>
                     <p class="category-count">Explore all</p>
@@ -187,15 +250,122 @@
         </div>
     </section>
 
-    <!-- ===== BOTTOM BANNER ===== -->
-    <section class="bottom-banner-section">
+    <!-- ===== NEWSLETTER SECTION ===== -->
+    <section class="newsletter-section">
         <div class="container">
-            <div class="banner-card">
-                <div class="banner-content">
-                    <h2>Discover knowledge at the speed of thought.</h2>
-                    <p>Fast search. Easy reading. Infinite learning.</p>
+            <div class="newsletter-card">
+                <div class="newsletter-icon">✉️</div>
+                <div class="newsletter-text">
+                    <h2 class="newsletter-title">Stay in the loop</h2>
+                    <p class="newsletter-desc">Get the latest book releases and reading lists delivered to your inbox.</p>
                 </div>
-                <button class="btn-banner">Start Exploring ➔</button>
+                <form id="newsletter-form" class="newsletter-form">
+                    <input type="email" id="newsletter-email" placeholder="Enter your email address" required>
+                    <button type="submit" class="btn-newsletter">Subscribe</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <!-- ===== FEATURES SECTION ===== -->
+    <section id="features" class="section features-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Why FastLib</span>
+                <h2 class="section-title">Built for the Modern Library</h2>
+                <p class="section-subtitle">Everything you need to manage, discover, and borrow — in one elegant platform.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(37,99,235,0.1)">
+                        <span class="feature-icon">⚡</span>
+                    </div>
+                    <h3 class="feature-title">Sub-Millisecond Search</h3>
+                    <p class="feature-desc">Our B-Tree powered search engine returns results before you finish typing — consistently under 1ms even across 100,000+ titles.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(16,185,129,0.1)">
+                        <span class="feature-icon">🏛️</span>
+                    </div>
+                    <h3 class="feature-title">Multi-Branch Availability</h3>
+                    <p class="feature-desc">See real-time availability across every branch. Know exactly where to pick up your book before you leave home.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.1)">
+                        <span class="feature-icon">🔔</span>
+                    </div>
+                    <h3 class="feature-title">Smart Waitlist</h3>
+                    <p class="feature-desc">Automatically join the waitlist for unavailable titles. Get notified the moment a copy is returned at any branch near you.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(245,158,11,0.1)">
+                        <span class="feature-icon">📊</span>
+                    </div>
+                    <h3 class="feature-title">25% Storage Savings</h3>
+                    <p class="feature-desc">Our compressed index format stores 100K+ records in a fraction of the space, reducing infrastructure costs without sacrificing speed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(239,68,68,0.1)">
+                        <span class="feature-icon">🔒</span>
+                    </div>
+                    <h3 class="feature-title">Secure Accounts</h3>
+                    <p class="feature-desc">Manage your borrowing history, active loans, and waitlists — all from a personal, secure account with full privacy controls.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrap" style="background: rgba(14,165,233,0.1)">
+                        <span class="feature-icon">📱</span>
+                    </div>
+                    <h3 class="feature-title">Works Everywhere</h3>
+                    <p class="feature-desc">Fully responsive across desktop, tablet, and mobile. Access the entire catalog from any device, anywhere, any time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PERFORMANCE SECTION ===== -->
+    <section id="performance" class="section performance-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Under the Hood</span>
+                <h2 class="section-title">Performance That Speaks Itself</h2>
+                <p class="section-subtitle">Real benchmarks. Real numbers. No marketing fluff.</p>
+            </div>
+            <div class="perf-grid">
+                <div class="perf-card">
+                    <div class="perf-metric">0.3ms</div>
+                    <div class="perf-label">Avg. search latency</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 3%"></div></div>
+                    <div class="perf-compare">vs 320ms industry avg.</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">100K+</div>
+                    <div class="perf-label">Books indexed</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 100%"></div></div>
+                    <div class="perf-compare">Prefix search across all fields</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">25%</div>
+                    <div class="perf-label">Less disk usage</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 75%"></div></div>
+                    <div class="perf-compare">vs traditional MySQL full-text</div>
+                </div>
+                <div class="perf-card">
+                    <div class="perf-metric">99.9%</div>
+                    <div class="perf-label">Uptime SLA</div>
+                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 99%"></div></div>
+                    <div class="perf-compare">High-availability architecture</div>
+                </div>
+            </div>
+
+            <div class="tech-stack">
+                <p class="tech-label">Powered by</p>
+                <div class="tech-chips">
+                    <span class="tech-chip">B-Tree Index</span>
+                    <span class="tech-chip">Node.js</span>
+                    <span class="tech-chip">Express</span>
+                    <span class="tech-chip">MySQL 8</span>
+                    <span class="tech-chip">Prefix Matching</span>
+                    <span class="tech-chip">Connection Pooling</span>
+                </div>
             </div>
         </div>
     </section>
@@ -260,6 +430,48 @@
         </div>
     </div>
 
+    <!-- ===== POETRY VIEW ===== -->
+    <div id="poetry-view" class="tab-view hidden section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">Community Corner</span>
+                <h2 class="section-title">The Poetry Hub</h2>
+                <p class="section-subtitle">Express yourself and discover works from the community.</p>
+            </div>
+            
+            <div class="poetry-layout">
+                <!-- Submit Poem Form -->
+                <div class="poetry-form-panel">
+                    <div class="glass-card poetry-card-form">
+                        <h3 style="margin-bottom: 1.5rem; font-weight: 800;">Write a Poem</h3>
+                        <form id="poem-form">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="poem-title">Title</label>
+                                <input class="form-input" type="text" id="poem-title" placeholder="Enter title..." required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label" for="poem-author">Author Name</label>
+                                <input class="form-input" type="text" id="poem-author" placeholder="Your name or pen name" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1.5rem;">
+                                <label class="form-label" for="poem-content">Your Poem</label>
+                                <textarea class="form-input" id="poem-content" rows="8" style="resize: vertical; min-height: 200px;" placeholder="Type your poem here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: 100%; height: 50px;">✨ Share with Community</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Poetry Feed -->
+                <div class="poetry-feed-panel">
+                    <div id="poetry-feed" class="poetry-feed">
+                        <div class="loading-state">Loading community poems...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== ABOUT VIEW ===== -->
     <div id="about-view" class="tab-view hidden section">
         <div class="container" style="max-width: 800px; margin: 0 auto; text-align: center;">
@@ -278,109 +490,7 @@
         </div>
     </div>
 
-    <!-- ===== FEATURES SECTION (HIDDEN) ===== -->
-    <section id="features" class="section features-section hidden">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Why FastLib</span>
-                <h2 class="section-title">Built for the Modern Library</h2>
-                <p class="section-subtitle">Everything you need to manage, discover, and borrow — in one elegant platform.</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(37,99,235,0.1)">
-                        <span class="feature-icon">⚡</span>
-                    </div>
-                    <h3 class="feature-title">Sub-Millisecond Search</h3>
-                    <p class="feature-desc">Our B-Tree powered search engine returns results before you finish typing — consistently under 1ms even across 100,000+ titles.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(16,185,129,0.1)">
-                        <span class="feature-icon">🏛️</span>
-                    </div>
-                    <h3 class="feature-title">Multi-Branch Availability</h3>
-                    <p class="feature-desc">See real-time availability across every branch. Know exactly where to pick up your book before you leave home.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(139,92,246,0.1)">
-                        <span class="feature-icon">🔔</span>
-                    </div>
-                    <h3 class="feature-title">Smart Waitlist</h3>
-                    <p class="feature-desc">Automatically join the waitlist for unavailable titles. Get notified the moment a copy is returned at any branch near you.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(245,158,11,0.1)">
-                        <span class="feature-icon">📊</span>
-                    </div>
-                    <h3 class="feature-title">25% Storage Savings</h3>
-                    <p class="feature-desc">Our compressed index format stores 100K+ records in a fraction of the space, reducing infrastructure costs without sacrificing speed.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(239,68,68,0.1)">
-                        <span class="feature-icon">🔒</span>
-                    </div>
-                    <h3 class="feature-title">Secure Accounts</h3>
-                    <p class="feature-desc">Manage your borrowing history, active loans, and waitlists — all from a personal, secure account with full privacy controls.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon-wrap" style="background: rgba(14,165,233,0.1)">
-                        <span class="feature-icon">📱</span>
-                    </div>
-                    <h3 class="feature-title">Works Everywhere</h3>
-                    <p class="feature-desc">Fully responsive across desktop, tablet, and mobile. Access the entire catalog from any device, anywhere, any time.</p>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- ===== PERFORMANCE SECTION (HIDDEN) ===== -->
-    <section id="performance" class="section performance-section hidden">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Under the Hood</span>
-                <h2 class="section-title">Performance That Speaks Itself</h2>
-                <p class="section-subtitle">Real benchmarks. Real numbers. No marketing fluff.</p>
-            </div>
-            <div class="perf-grid">
-                <div class="perf-card">
-                    <div class="perf-metric">0.3ms</div>
-                    <div class="perf-label">Avg. search latency</div>
-                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 3%"></div></div>
-                    <div class="perf-compare">vs 320ms industry avg.</div>
-                </div>
-                <div class="perf-card">
-                    <div class="perf-metric">100K+</div>
-                    <div class="perf-label">Books indexed</div>
-                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 100%"></div></div>
-                    <div class="perf-compare">Prefix search across all fields</div>
-                </div>
-                <div class="perf-card">
-                    <div class="perf-metric">25%</div>
-                    <div class="perf-label">Less disk usage</div>
-                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 75%"></div></div>
-                    <div class="perf-compare">vs traditional MySQL full-text</div>
-                </div>
-                <div class="perf-card">
-                    <div class="perf-metric">99.9%</div>
-                    <div class="perf-label">Uptime SLA</div>
-                    <div class="perf-bar-wrap"><div class="perf-bar" style="width: 99%"></div></div>
-                    <div class="perf-compare">High-availability architecture</div>
-                </div>
-            </div>
-
-            <div class="tech-stack">
-                <p class="tech-label">Powered by</p>
-                <div class="tech-chips">
-                    <span class="tech-chip">B-Tree Index</span>
-                    <span class="tech-chip">Node.js</span>
-                    <span class="tech-chip">Express</span>
-                    <span class="tech-chip">MySQL 8</span>
-                    <span class="tech-chip">Prefix Matching</span>
-                    <span class="tech-chip">Connection Pooling</span>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
@@ -398,53 +508,124 @@
         </div>
     </footer>
 
-    <!-- ===== SIGN IN / REGISTER MODAL ===== -->
-    <div id="auth-modal" class="modal-overlay hidden">
-        <div class="modal-container auth-modal-container">
-            <button id="auth-modal-close" class="modal-close" aria-label="Close">
+    <!-- ===== SIGN IN / REGISTER FULLSCREEN MODAL ===== -->
+    <div id="auth-modal" class="modal-overlay hidden auth-fullscreen">
+        <div class="auth-split-container">
+            <button id="auth-modal-close" class="modal-close split-close" aria-label="Close">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <div class="auth-header">
-                <div class="auth-logo">⚡ FastLib</div>
-                <div class="auth-tabs">
-                    <button class="auth-tab active" id="tab-signin">Sign In</button>
-                    <button class="auth-tab" id="tab-register">Register</button>
+            
+            <!-- Left Side: Forms -->
+            <div class="auth-left">
+                <div class="auth-left-inner">
+                    <div class="auth-logo-top">
+                        <span class="logo-icon">⚡</span>
+                        <span class="logo-text">FastLib</span>
+                    </div>
+
+                    <!-- Sign In View -->
+                    <div id="signin-view" class="auth-view">
+                        <div class="auth-headings">
+                            <p class="auth-subtitle">Welcome back</p>
+                            <h2 class="auth-title">Sign In to FastLib</h2>
+                        </div>
+                        
+                        <form id="signin-form" class="auth-split-form">
+                            <div class="form-group floating-group">
+                                <input class="form-input floating-input" type="email" id="signin-email" placeholder=" " required>
+                                <label class="floating-label" for="signin-email">E-mail</label>
+                                <span class="input-icon">✉️</span>
+                            </div>
+                            <div class="form-group floating-group">
+                                <input class="form-input floating-input" type="password" id="signin-password" placeholder=" " required>
+                                <label class="floating-label" for="signin-password">Password</label>
+                                <button type="button" class="pw-toggle" tabindex="-1">👁️</button>
+                            </div>
+                            
+                            <div class="auth-forgot">
+                                <a href="#">Forgot password?</a>
+                            </div>
+
+                            <div id="signin-error" class="form-error hidden"></div>
+                            <button type="submit" class="btn-auth split-btn">Sign In</button>
+                        </form>
+
+                        <div class="auth-divider">
+                            <span>or sign in with</span>
+                        </div>
+
+                        <div class="social-logins">
+                            <button class="btn-social" aria-label="Facebook">📘</button>
+                            <button class="btn-social btn-google" id="google-signin-btn" aria-label="Sign in with Google">
+                                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                Google
+                            </button>
+                            <button class="btn-social" aria-label="Apple">🍏</button>
+                        </div>
+
+                        <div class="auth-bottom">
+                            Don't have an account? <a href="#" id="switch-to-register" class="auth-link">Sign up</a>
+                        </div>
+                    </div>
+
+                    <!-- Register View -->
+                    <div id="register-view" class="auth-view hidden">
+                        <div class="auth-headings">
+                            <p class="auth-subtitle">Start your journey</p>
+                            <h2 class="auth-title">Sign Up to FastLib</h2>
+                        </div>
+                        
+                        <form id="register-form" class="auth-split-form">
+                            <div class="form-group floating-group">
+                                <input class="form-input floating-input" type="text" id="reg-name" placeholder=" " required>
+                                <label class="floating-label" for="reg-name">Full Name</label>
+                                <span class="input-icon">👤</span>
+                            </div>
+                            <div class="form-group floating-group">
+                                <input class="form-input floating-input" type="email" id="reg-email" placeholder=" " required>
+                                <label class="floating-label" for="reg-email">E-mail</label>
+                                <span class="input-icon">✉️</span>
+                            </div>
+                            <div class="form-group floating-group">
+                                <input class="form-input floating-input" type="password" id="reg-password" placeholder=" " required>
+                                <label class="floating-label" for="reg-password">Password</label>
+                                <button type="button" class="pw-toggle" tabindex="-1">👁️</button>
+                            </div>
+                            
+                            <div id="register-error" class="form-error hidden"></div>
+                            <button type="submit" class="btn-auth split-btn">Sign Up</button>
+                        </form>
+
+                        <div class="auth-divider">
+                            <span>or sign up with</span>
+                        </div>
+
+                        <div class="social-logins">
+                            <button class="btn-social" aria-label="Facebook">📘</button>
+                            <button class="btn-social btn-google" id="google-register-btn" aria-label="Sign up with Google">
+                                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                                Google
+                            </button>
+                            <button class="btn-social" aria-label="Apple">🍏</button>
+                        </div>
+
+                        <div class="auth-bottom">
+                            Have an account? <a href="#" id="switch-to-signin" class="auth-link">Sign in</a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Sign In Form -->
-            <form id="signin-form" class="auth-form">
-                <div class="form-group">
-                    <label class="form-label" for="signin-email">Email</label>
-                    <input class="form-input" type="email" id="signin-email" placeholder="you@example.com" required>
+            <!-- Right Side: Visual -->
+            <div class="auth-right">
+                <div class="auth-right-content">
+                    <div class="carousel-indicators">
+                        <div class="c-dot active"></div>
+                        <div class="c-dot"></div>
+                        <div class="c-dot"></div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="signin-password">Password</label>
-                    <input class="form-input" type="password" id="signin-password" placeholder="••••••••" required>
-                </div>
-                <div id="signin-error" class="form-error hidden"></div>
-                <button type="submit" class="btn-auth">Sign In</button>
-                <p class="auth-switch">Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
-            </form>
-
-            <!-- Register Form -->
-            <form id="register-form" class="auth-form hidden">
-                <div class="form-group">
-                    <label class="form-label" for="reg-name">Full Name</label>
-                    <input class="form-input" type="text" id="reg-name" placeholder="Jane Doe" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="reg-email">Email</label>
-                    <input class="form-input" type="email" id="reg-email" placeholder="you@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="reg-password">Password</label>
-                    <input class="form-input" type="password" id="reg-password" placeholder="Min. 6 characters" required>
-                </div>
-                <div id="register-error" class="form-error hidden"></div>
-                <button type="submit" class="btn-auth">Create Account</button>
-                <p class="auth-switch">Already have an account? <a href="#" id="switch-to-signin">Sign in here</a></p>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -581,5 +762,6 @@
     <div id="toast-container" class="toast-container"></div>
 
     <script src="script.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
 </html>

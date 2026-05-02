@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Settings – FastLib</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+    <!-- Navbar (reuse existing) -->
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <div class="logo" id="logo-home" onclick="window.location.href='index.html'">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">FastLib</span>
+            </div>
+            <div class="nav-links nav-links-center">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#books" class="nav-link">Books</a>
+                <a href="#poetry" class="nav-link">Poetry</a>
+                <a href="#dashboard" class="nav-link">Dashboard</a>
+            </div>
+            <div class="nav-actions">
+                <button id="open-signin-btn" class="btn-primary">Sign In</button>
+                <button id="theme-toggle" class="theme-toggle"><span class="icon-sun"></span></button>
+                <div class="user-menu" id="user-nav">
+                    <div class="user-avatar" id="user-avatar-nav">U</div>
+                    <span class="user-name" id="user-name-nav">User</span>
+                    <svg class="caret-down" width="12" height="12" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+                <div class="user-dropdown hidden" id="user-dropdown">
+                    <div class="dropdown-header">
+                        <div class="dropdown-avatar" id="dropdown-avatar">U</div>
+                        <div>
+                            <div class="dropdown-name" id="dropdown-name">User</div>
+                            <div class="dropdown-email" id="dropdown-email">user@example.com</div>
+                        </div>
+                    </div>
+                    <hr class="dropdown-divider"/>
+                    <a href="#" class="dropdown-item" id="profile-link">Profile Settings</a>
+                    <a href="#" class="dropdown-item" id="signout-btn">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="profile-page" style="margin-top: 100px;">
+        <section class="profile-header">
+            <div class="profile-header-banner"></div>
+            <div class="profile-header-content">
+                <div class="profile-avatar-large" id="profile-avatar-large">U</div>
+                <div class="profile-info">
+                    <h2 class="profile-name" id="profile-display-name">User Name</h2>
+                    <p class="profile-email" id="profile-display-email">user@example.com</p>
+                </div>
+                <button class="btn-edit-profile" id="btn-edit-profile">Edit</button>
+            </div>
+        </section>
+        <section class="profile-tabs">
+            <button class="profile-tab active" id="ptab-account">Account</button>
+            <button class="profile-tab" id="ptab-password">Password</button>
+            <button class="profile-tab" id="ptab-preferences">Preferences</button>
+        </section>
+        <section class="profile-content">
+            <!-- Account Info -->
+            <form id="profile-account-form" class="profile-form">
+                <div class="form-grid-2-col">
+                    <div class="form-group">
+                        <label class="form-label" for="profile-name-input">Full Name</label>
+                        <input class="form-input" type="text" id="profile-name-input" placeholder="Your First Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-nickname-input">Nick Name</label>
+                        <input class="form-input" type="text" id="profile-nickname-input" placeholder="Your First Name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-gender-input">Gender</label>
+                        <select class="form-input" id="profile-gender-input">
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-country-input">Country</label>
+                        <select class="form-input" id="profile-country-input">
+                            <option value="">Select Country</option>
+                            <option value="us">United States</option>
+                            <option value="uk">United Kingdom</option>
+                            <option value="ca">Canada</option>
+                            <option value="au">Australia</option>
+                            <option value="in">India</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-language-input">Language</label>
+                        <select class="form-input" id="profile-language-input">
+                            <option value="">Select Language</option>
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="hi">Hindi</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="profile-timezone-input">Time Zone</label>
+                        <select class="form-input" id="profile-timezone-input">
+                            <option value="">Select Time Zone</option>
+                            <option value="pst">Pacific Time (PT)</option>
+                            <option value="est">Eastern Time (ET)</option>
+                            <option value="utc">UTC</option>
+                            <option value="ist">Indian Standard Time (IST)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="email-section">
+                    <h3 class="email-section-title">My email Address</h3>
+                    <div class="email-item">
+                        <div class="email-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        </div>
+                        <div class="email-info">
+                            <div class="email-address" id="profile-email-input-display">user@example.com</div>
+                            <div class="email-time">1 month ago</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-add-email" id="btn-add-email">+Add Email Address</button>
+                    <!-- Hidden input to maintain compatibility with JS saving -->
+                    <input type="hidden" id="profile-email-input" required>
+                </div>
+
+                <div id="profile-account-msg" class="form-msg hidden"></div>
+                <!-- Hide the submit button to match design, saving can be bound to the Edit button or auto-save -->
+                <button type="submit" class="btn-primary" id="profile-save-btn" style="display:none;">Save Changes</button>
+            </form>
+            <!-- Password Change -->
+            <form id="profile-password-form" class="profile-form hidden">
+                <div class="form-group">
+                    <label class="form-label" for="profile-current-pw">Current Password</label>
+                    <input class="form-input" type="password" id="profile-current-pw" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="profile-new-pw">New Password</label>
+                    <input class="form-input" type="password" id="profile-new-pw" minlength="6" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="profile-confirm-pw">Confirm New Password</label>
+                    <input class="form-input" type="password" id="profile-confirm-pw" required>
+                </div>
+                <div id="profile-pw-msg" class="form-msg hidden"></div>
+                <button type="submit" class="btn-primary">Update Password</button>
+            </form>
+            <!-- Preferences -->
+            <form id="profile-preferences-form" class="profile-form hidden">
+                <div class="form-group toggle-group">
+                    <label class="form-label" for="pref-dark-mode">Dark Mode</label>
+                    <input type="checkbox" id="pref-dark-mode" class="toggle-input"/>
+                </div>
+                <div class="form-group toggle-group">
+                    <label class="form-label" for="pref-email-notif">Email Notifications</label>
+                    <input type="checkbox" id="pref-email-notif" class="toggle-input"/>
+                </div>
+                <div id="profile-prefs-msg" class="form-msg hidden"></div>
+                <button type="submit" class="btn-primary">Save Preferences</button>
+            </form>
+            <!-- Danger Zone -->
+            <section class="danger-zone">
+                <p class="danger-label">Danger Zone</p>
+                <button id="delete-account-btn" class="btn-danger">Delete Account</button>
+            </section>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Profile page initialization – re‑uses helpers from script.js
+        // Self-contained helpers (script.js helpers are scoped inside its DOMContentLoaded)
+        function _getCurrentUser() {
+            return JSON.parse(localStorage.getItem('fastlib_current_user') || 'null');
+        }
+        function _saveCurrentUser(u) {
+            localStorage.setItem('fastlib_current_user', JSON.stringify(u));
+        }
+        function _updateNavUI(u) {
+            // Keep navbar in sync if elements exist
+            const avatarEl = document.getElementById('user-avatar-nav');
+            const nameEl   = document.getElementById('user-name-nav');
+            if (avatarEl) avatarEl.textContent = u.name.charAt(0).toUpperCase();
+            if (nameEl)   nameEl.textContent   = u.name.split(' ')[0];
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let user = _getCurrentUser();
+            if (!user) { window.location.href = 'index.html'; return; }
+
+            const msgEl = document.getElementById('profile-account-msg');
+
+            function showMsg(el, text, type) {
+                el.textContent = text;
+                el.className = `form-msg ${type}`;
+                el.classList.remove('hidden');
+            }
+
+            function populateUI(u) {
+                document.getElementById('profile-avatar-large').textContent = u.name.charAt(0).toUpperCase();
+                document.getElementById('profile-display-name').textContent = u.name;
+                document.getElementById('profile-display-email').textContent = u.email;
+                document.getElementById('profile-email-input-display').textContent = u.email || '';
+                document.getElementById('profile-name-input').value = u.name || '';
+                document.getElementById('profile-email-input').value = u.email || '';
+                if (u.nickname) document.getElementById('profile-nickname-input').value = u.nickname;
+                if (u.gender)   document.getElementById('profile-gender-input').value = u.gender;
+                if (u.country)  document.getElementById('profile-country-input').value = u.country;
+                if (u.language) document.getElementById('profile-language-input').value = u.language;
+                if (u.timezone) document.getElementById('profile-timezone-input').value = u.timezone;
+            }
+
+            // Load fresh profile from DB
+            try {
+                const res = await fetch(`/api/profile/${encodeURIComponent(user.email)}`);
+                if (res.ok) {
+                    const dbUser = await res.json();
+                    user = { ...user, ...dbUser };
+                    _saveCurrentUser(user);
+                }
+            } catch(e) { console.warn('Using cached profile.'); }
+
+            populateUI(user);
+
+            // Edit button
+            document.getElementById('btn-edit-profile').addEventListener('click', () => {
+                const saveBtn = document.getElementById('profile-save-btn');
+                saveBtn.style.display = saveBtn.style.display === 'none' ? 'inline-block' : 'none';
+                if (saveBtn.style.display === 'inline-block') document.getElementById('profile-name-input').focus();
+            });
+
+            // Tabs – use the key itself as the data-tab identifier
+            const tabBtns = {
+                account:  document.getElementById('ptab-account'),
+                password: document.getElementById('ptab-password'),
+                prefs:    document.getElementById('ptab-preferences')
+            };
+            const tabForms = {
+                account:  document.getElementById('profile-account-form'),
+                password: document.getElementById('profile-password-form'),
+                prefs:    document.getElementById('profile-preferences-form')
+            };
+
+            function showTab(active) {
+                Object.entries(tabBtns).forEach(([k, btn]) => btn.classList.toggle('active', k === active));
+                Object.entries(tabForms).forEach(([k, form]) => form.classList.toggle('hidden', k !== active));
+            }
+
+            tabBtns.account.addEventListener('click',  () => showTab('account'));
+            tabBtns.password.addEventListener('click', () => showTab('password'));
+            tabBtns.prefs.addEventListener('click',    () => showTab('prefs'));
+            showTab('account'); // default
+
+            // Save Profile -> DB
+            document.getElementById('profile-account-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const saveBtn = document.getElementById('profile-save-btn');
+                const newName  = document.getElementById('profile-name-input').value.trim();
+                const newEmail = document.getElementById('profile-email-input').value.trim().toLowerCase();
+                const nickname = document.getElementById('profile-nickname-input').value.trim();
+                const gender   = document.getElementById('profile-gender-input').value;
+                const country  = document.getElementById('profile-country-input').value;
+                const language = document.getElementById('profile-language-input').value;
+                const timezone = document.getElementById('profile-timezone-input').value;
+                if (!newName) { showMsg(msgEl, 'Full name is required.', 'error'); return; }
+                saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+                try {
+                    const res = await fetch(`/api/profile/${encodeURIComponent(user.email)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: newName, newEmail, nickname, gender, country, language, timezone })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { showMsg(msgEl, data.error || 'Update failed.', 'error'); return; }
+                    user = { ...user, ...data.user };
+                    _saveCurrentUser(user);
+                    _updateNavUI(user);
+                    populateUI(user);
+                    saveBtn.style.display = 'none';
+                    showMsg(msgEl, '✅ Profile saved!', 'success');
+                } catch(err) {
+                    showMsg(msgEl, 'Server error. Please try again.', 'error');
+                } finally {
+                    saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+                }
+            });
+
+            // Change Password – localStorage primary (API best-effort sync)
+            document.getElementById('profile-password-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const pwMsg = document.getElementById('profile-pw-msg');
+                const cur = document.getElementById('profile-current-pw').value;
+                const nw  = document.getElementById('profile-new-pw').value;
+                const cnf = document.getElementById('profile-confirm-pw').value;
+
+                if (nw.length < 6) { showMsg(pwMsg, 'New password must be at least 6 characters.', 'error'); return; }
+                if (nw !== cnf)    { showMsg(pwMsg, 'Passwords do not match.', 'error'); return; }
+
+                // Verify current password against localStorage
+                const storedUser = _getCurrentUser();
+                if (!storedUser || storedUser.password !== cur) {
+                    showMsg(pwMsg, 'Current password is incorrect.', 'error');
+                    return;
+                }
+
+                // Update password in localStorage
+                storedUser.password = nw;
+                _saveCurrentUser(storedUser);
+                user = storedUser;
+
+                // Also update in the users list
+                const allUsers = JSON.parse(localStorage.getItem('fastlib_users') || '[]');
+                const idx = allUsers.findIndex(u => u.email === storedUser.email);
+                if (idx !== -1) { allUsers[idx].password = nw; localStorage.setItem('fastlib_users', JSON.stringify(allUsers)); }
+
+                // Best-effort: sync to DB if available
+                try {
+                    await fetch(`/api/profile/${encodeURIComponent(user.email)}/password`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ currentPassword: cur, newPassword: nw })
+                    });
+                } catch(e) { /* DB not available – localStorage already updated */ }
+
+                showMsg(pwMsg, '✅ Password updated successfully!', 'success');
+                document.getElementById('profile-password-form').reset();
+            });
+
+
+
+            // Preferences (localStorage only)
+            const darkModeToggle   = document.getElementById('pref-dark-mode');
+            const emailNotifToggle = document.getElementById('pref-email-notif');
+            const prefs = JSON.parse(localStorage.getItem('fastlib_prefs') || '{}');
+            darkModeToggle.checked   = prefs.darkMode || false;
+            emailNotifToggle.checked = prefs.emailNotifications || false;
+            document.getElementById('profile-preferences-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const newPrefs = { darkMode: darkModeToggle.checked, emailNotifications: emailNotifToggle.checked };
+                localStorage.setItem('fastlib_prefs', JSON.stringify(newPrefs));
+                if (newPrefs.darkMode) document.body.setAttribute('data-theme', 'dark');
+                else document.body.removeAttribute('data-theme');
+                showMsg(document.getElementById('profile-prefs-msg'), 'Preferences saved.', 'success');
+            });
+
+            // Delete Account -> DB
+            document.getElementById('delete-account-btn').addEventListener('click', async () => {
+                if (!confirm('Are you sure? This permanently deletes your account.')) return;
+                try {
+                    await fetch(`/api/profile/${encodeURIComponent(user.email)}`, { method: 'DELETE' });
+                } catch(e) {}
+                localStorage.removeItem('fastlib_current_user');
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+</body>
+</html>

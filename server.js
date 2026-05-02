@@ -22,6 +22,30 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// Auto-create users table if it doesn't exist
+(async () => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id            INT AUTO_INCREMENT PRIMARY KEY,
+                name          VARCHAR(255) NOT NULL,
+                email         VARCHAR(255) NOT NULL UNIQUE,
+                password      VARCHAR(255) NOT NULL,
+                nickname      VARCHAR(255),
+                gender        VARCHAR(50),
+                country       VARCHAR(100),
+                language      VARCHAR(100),
+                timezone      VARCHAR(100),
+                created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✅ Users table ready');
+    } catch (err) {
+        console.error('❌ Failed to create users table:', err.message);
+    }
+})();
+
 // Gemini AI Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
@@ -119,7 +143,14 @@ app.get('/api/books/google', async (req, res) => {
 
     try {
         const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
-        const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=${limit}&orderBy=relevance&printType=books&key=${apiKey}`;
+        const params = new URLSearchParams({
+            q: query,
+            maxResults: limit,
+            key: apiKey
+        });
+        const url = `https://www.googleapis.com/books/v1/volumes?${params.toString()}`;
+        
+        console.log('Fetching from Google Books:', url);
         const response = await fetch(url);
         const data = await response.json();
 
@@ -128,7 +159,10 @@ app.get('/api/books/google', async (req, res) => {
             return res.status(500).json({ error: data.error.message });
         }
 
-        const books = (data.items || []).map(item => {
+        const items = data.items || [];
+        console.log(`Google Books returned ${items.length} items for query: ${query}`);
+
+        const books = items.map(item => {
             const info = item.volumeInfo || {};
             const coverUrl = info.imageLinks?.thumbnail?.replace('http:', 'https:') 
                           || info.imageLinks?.smallThumbnail?.replace('http:', 'https:') 
@@ -151,7 +185,6 @@ app.get('/api/books/google', async (req, res) => {
                 source: 'google'
             };
         });
-
         res.json(books);
     } catch (err) {
         console.error('Google Books Error:', err);
@@ -173,11 +206,24 @@ app.get('/api/books', async (req, res) => {
 
         const books = (data.items || []).map(item => {
             const info = item.volumeInfo || {};
+            const coverUrl = info.imageLinks?.thumbnail?.replace('http:', 'https:') 
+                          || info.imageLinks?.smallThumbnail?.replace('http:', 'https:') 
+                          || null;
             return {
                 id: `gbook_${item.id}`,
                 title: info.title || 'Untitled',
-                author: (info.authors || ['Unknown Author'])[0],
-                genre: (info.categories || ['General'])[0]
+                author: (info.authors || ['Unknown Author']).join(', '),
+                genre: (info.categories || ['General'])[0],
+                description: info.description || 'No description available.',
+                coverImage: coverUrl,
+                publishedDate: info.publishedDate || null,
+                pageCount: info.pageCount || null,
+                rating: info.averageRating || null,
+                ratingsCount: info.ratingsCount || 0,
+                previewLink: info.previewLink || null,
+                infoLink: info.infoLink || null,
+                publisher: info.publisher || null,
+                source: 'google'
             };
         });
         res.json(books);
@@ -228,6 +274,229 @@ app.get('/api/authors', async (req, res) => {
         { author: 'Ray Bradbury', count: '27+' }, { author: 'Philip K. Dick', count: '32+' },
         { author: 'Brandon Sanderson', count: '24+' }, { author: 'Terry Pratchett', count: '41+' }
     ]);
+});
+
+// Poetry Hub Data Store (Protoype/Memory)
+let poetryData = [
+    {
+        id: 1,
+        title: "The Silicon Scroll",
+        author: "Library AI",
+        content: "Through logic gates and B-Tree roots,\nKnowledge grows in rapid shoots.\nA thousand pages, searched in one,\nThe journey has but just begun.",
+        date: new Date().toLocaleDateString(),
+        likes: 12,
+        comments: [
+            { user: 'Admin', text: 'First poem!', date: new Date().toLocaleDateString() }
+        ]
+    }
+];
+
+// GET /api/poetry
+app.get('/api/poetry', async (req, res) => {
+    try {
+        // Fetch real poems from PoetryDB
+        const response = await fetch('https://poetrydb.org/random/12');
+        const externalPoems = await response.json();
+        
+        const formattedExternal = Array.isArray(externalPoems) ? externalPoems.map(p => ({
+            id: `ext_${Math.random().toString(36).substr(2, 9)}`,
+            title: p.title,
+            author: p.author,
+            content: p.lines.slice(0, 10).join('\n') + (p.lines.length > 10 ? '\n...' : ''),
+            date: 'Classic Literature',
+            isExternal: true,
+            likes: Math.floor(Math.random() * 50),
+            comments: []
+        })) : [];
+
+        // Merge with community poems
+        const allPoems = [...poetryData, ...formattedExternal];
+        // Shuffle or sort by date? Let's keep community ones at top or mixed.
+        // For a "hub" feel, let's just send them all.
+        res.json(allPoems);
+    } catch (err) {
+        console.error('Poetry API Error:', err);
+        res.json(poetryData); // Fallback to local data
+    }
+});
+
+// POST /api/poetry
+app.post('/api/poetry', (req, res) => {
+    const { title, author, content } = req.body;
+    if (!title || !author || !content) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    const newPoem = {
+        id: Date.now(),
+        title,
+        author,
+        content,
+        date: new Date().toLocaleDateString(),
+        isExternal: false,
+        likes: 0,
+        comments: []
+    };
+    poetryData.unshift(newPoem); // Newest first
+    res.status(201).json(newPoem);
+});
+
+// POST /api/poetry/:id/like
+app.post('/api/poetry/:id/like', (req, res) => {
+    const id = req.params.id;
+    let poem = poetryData.find(p => p.id == id || p.id === id);
+    if (!poem && req.body.poem) {
+        poem = req.body.poem;
+        if (!poem.likes) poem.likes = 0;
+        if (!poem.comments) poem.comments = [];
+        poetryData.push(poem);
+    }
+    if (poem) {
+        poem.likes = (poem.likes || 0) + 1;
+        res.json(poem);
+    } else {
+        res.status(404).json({ error: 'Poem not found' });
+    }
+});
+
+// POST /api/poetry/:id/comment
+app.post('/api/poetry/:id/comment', (req, res) => {
+    const id = req.params.id;
+    const { text, user, poemData } = req.body;
+    let poem = poetryData.find(p => p.id == id || p.id === id);
+    if (!poem && poemData) {
+        poem = poemData;
+        if (!poem.likes) poem.likes = 0;
+        if (!poem.comments) poem.comments = [];
+        poetryData.push(poem);
+    }
+    if (poem) {
+        if (!poem.comments) poem.comments = [];
+        poem.comments.push({ user: user || 'Anonymous', text, date: new Date().toLocaleDateString() });
+        res.json(poem);
+    } else {
+        res.status(404).json({ error: 'Poem not found' });
+    }
+});
+
+// ============================
+// User Auth & Profile API
+// ============================
+
+// POST /api/auth/register
+app.post('/api/auth/register', async (req, res) => {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password)
+        return res.status(400).json({ error: 'Name, email and password are required.' });
+    if (password.length < 6)
+        return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    try {
+        const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
+        if (existing.length > 0)
+            return res.status(409).json({ error: 'An account with this email already exists.' });
+        const [result] = await pool.query(
+            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+            [name, email.toLowerCase(), password]
+        );
+        const user = { id: result.insertId, name, email: email.toLowerCase() };
+        res.status(201).json({ success: true, user });
+    } catch (err) {
+        console.error('Register Error:', err);
+        res.status(500).json({ error: 'Registration failed.' });
+    }
+});
+
+// POST /api/auth/signin
+app.post('/api/auth/signin', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password)
+        return res.status(400).json({ error: 'Email and password are required.' });
+    try {
+        const [rows] = await pool.query(
+            'SELECT id, name, email, nickname, gender, country, language, timezone FROM users WHERE email = ? AND password = ?',
+            [email.toLowerCase(), password]
+        );
+        if (rows.length === 0)
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        res.json({ success: true, user: rows[0] });
+    } catch (err) {
+        console.error('Signin Error:', err);
+        res.status(500).json({ error: 'Sign-in failed.' });
+    }
+});
+
+// GET /api/profile/:email  – fetch a user's profile
+app.get('/api/profile/:email', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT id, name, email, nickname, gender, country, language, timezone, created_at FROM users WHERE email = ?',
+            [req.params.email.toLowerCase()]
+        );
+        if (rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Profile GET Error:', err);
+        res.status(500).json({ error: 'Failed to fetch profile.' });
+    }
+});
+
+// PUT /api/profile/:email  – update profile fields
+app.put('/api/profile/:email', async (req, res) => {
+    const { name, nickname, gender, country, language, timezone, newEmail } = req.body;
+    const currentEmail = req.params.email.toLowerCase();
+    const targetEmail = (newEmail || currentEmail).toLowerCase();
+    try {
+        // Check if new email is already taken by someone else
+        if (targetEmail !== currentEmail) {
+            const [conflict] = await pool.query(
+                'SELECT id FROM users WHERE email = ? AND email != ?', [targetEmail, currentEmail]
+            );
+            if (conflict.length > 0)
+                return res.status(409).json({ error: 'Email already in use by another account.' });
+        }
+        await pool.query(
+            `UPDATE users SET name=?, email=?, nickname=?, gender=?, country=?, language=?, timezone=? WHERE email=?`,
+            [name, targetEmail, nickname || null, gender || null, country || null, language || null, timezone || null, currentEmail]
+        );
+        const [rows] = await pool.query(
+            'SELECT id, name, email, nickname, gender, country, language, timezone FROM users WHERE email = ?',
+            [targetEmail]
+        );
+        res.json({ success: true, user: rows[0] });
+    } catch (err) {
+        console.error('Profile PUT Error:', err);
+        res.status(500).json({ error: 'Failed to update profile.' });
+    }
+});
+
+// PUT /api/profile/:email/password  – change password
+app.put('/api/profile/:email/password', async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const email = req.params.email.toLowerCase();
+    try {
+        const [rows] = await pool.query(
+            'SELECT id FROM users WHERE email = ? AND password = ?', [email, currentPassword]
+        );
+        if (rows.length === 0)
+            return res.status(401).json({ error: 'Current password is incorrect.' });
+        if (!newPassword || newPassword.length < 6)
+            return res.status(400).json({ error: 'New password must be at least 6 characters.' });
+        await pool.query('UPDATE users SET password = ? WHERE email = ?', [newPassword, email]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Password Change Error:', err);
+        res.status(500).json({ error: 'Failed to change password.' });
+    }
+});
+
+// DELETE /api/profile/:email  – delete account
+app.delete('/api/profile/:email', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM users WHERE email = ?', [req.params.email.toLowerCase()]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Delete Account Error:', err);
+        res.status(500).json({ error: 'Failed to delete account.' });
+    }
 });
 
 app.listen(port, () => {

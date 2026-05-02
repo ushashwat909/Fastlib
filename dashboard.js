@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('click', () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            
+
             panes.forEach(p => p.classList.add('hidden'));
             document.getElementById(`tab-content-${tab.dataset.tab}`).classList.remove('hidden');
         });
@@ -102,25 +102,28 @@ document.addEventListener('DOMContentLoaded', () => {
             libraryData.borrowed.forEach(book => {
                 const borrowDate = book.borrowDate ? new Date(book.borrowDate) : new Date();
                 const dueDate = book.dueDate ? new Date(book.dueDate) : new Date(borrowDate.getTime() + 14 * 24 * 60 * 60 * 1000);
-                
+
                 const timeDiff = dueDate.getTime() - now.getTime();
                 const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                
+
                 let warningHTML = '';
                 let warningClass = '';
                 if (daysDiff <= 3 && daysDiff >= 0) {
-                    warningHTML = `<div class="due-warning">⚠️ Due in ${daysDiff} day${daysDiff===1?'':'s'}</div>`;
+                    warningHTML = `<div class="due-warning">⚠️ Due in ${daysDiff} day${daysDiff === 1 ? '' : 's'}</div>`;
                     warningClass = 'due-soon';
                 } else if (daysDiff < 0) {
                     warningHTML = `<div class="due-warning">🚨 Overdue</div>`;
                 }
 
                 const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
+                const coverHtml = book.coverImage
+                    ? `<div class="book-card-cover"><img src="${book.coverImage}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`
+                    : `<div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white;">📖</div>`;
                 const item = document.createElement('div');
                 item.className = `book-card ${warningClass}`;
                 item.innerHTML = `
                     ${warningHTML}
-                    <div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white;">📖</div>
+                    ${coverHtml}
                     <div class="book-card-info">
                         <div class="book-card-title">${book.title}</div>
                         <div class="book-card-author">by ${book.author}</div>
@@ -147,11 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             libraryData.history.forEach(book => {
                 const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
+                const coverHtml = book.coverImage
+                    ? `<div class="book-card-cover" style="opacity: 0.8;"><img src="${book.coverImage}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`
+                    : `<div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white; opacity: 0.8;">📖</div>`;
                 const d = book.returnedDate ? new Date(book.returnedDate).toLocaleDateString() : 'Recently';
                 const item = document.createElement('div');
                 item.className = 'book-card';
                 item.innerHTML = `
-                    <div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white; opacity: 0.8;">📖</div>
+                    ${coverHtml}
                     <div class="book-card-info" style="opacity: 0.8;">
                         <div class="book-card-title">${book.title}</div>
                         <div class="book-card-author">by ${book.author}</div>
@@ -164,66 +170,71 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- WAITLIST ---
+        // --- WISHLIST ---
         if (libraryData.waitlist.length === 0) {
             gridW.innerHTML = `
                 <div style="grid-column: 1/-1;" class="empty-state">
-                    <div class="empty-icon">🔔</div>
-                    <h3 class="empty-title">No active waitlists.</h3>
-                    <p class="empty-desc">You'll be notified when waitlisted books become available.</p>
+                    <div class="empty-icon">❤️</div>
+                    <h3 class="empty-title">Your wishlist is empty.</h3>
+                    <p class="empty-desc">Save books you're interested in and we'll track them for you.</p>
                 </div>
             `;
         } else {
             libraryData.waitlist.forEach(book => {
                 const [c1, c2] = book.coverGradient || ['#1e3a5f', '#3b82f6'];
+                const coverHtml = book.coverImage
+                    ? `<div class="book-card-cover"><img src="${book.coverImage}" alt="${book.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`
+                    : `<div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white;">📖</div>`;
                 const item = document.createElement('div');
                 item.className = 'book-card';
                 item.innerHTML = `
-                    <div class="book-card-cover" style="background: linear-gradient(135deg, ${c1}, ${c2}); color: white;">📖</div>
+                    ${coverHtml}
                     <div class="book-card-info">
                         <div class="book-card-title">${book.title}</div>
                         <div class="book-card-author">by ${book.author}</div>
                         <div class="book-card-meta">
                             <div class="meta-row"><span class="meta-label">Status:</span> <span class="meta-val" style="color: #d97706;">In Queue</span></div>
                         </div>
-                        <button class="btn-return" data-waitlist-id="${book.id}">Leave Waitlist</button>
+                        <button class="btn-return" data-waitlist-id="${book.id}">Remove from Wishlist</button>
                     </div>
                 `;
                 gridW.appendChild(item);
             });
         }
 
-        attachActions();
     }
 
-    function attachActions() {
-        // Return Book Action
-        document.querySelectorAll('button[data-id]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = parseInt(e.target.dataset.id);
-                const bookIndex = libraryData.borrowed.findIndex(b => b.id === id);
-                if (bookIndex > -1) {
-                    const book = libraryData.borrowed.splice(bookIndex, 1)[0];
-                    book.returnedDate = new Date().toISOString();
-                    libraryData.history.unshift(book); // add to top of history
-                    saveData(libraryData);
-                    renderGrids();
-                    showToast(`"${book.title}" returned successfully!`, 'success');
-                }
-            });
-        });
+    // Handle actions using event delegation (set up once)
+    const gridB = document.getElementById('grid-borrowed');
+    const gridW = document.getElementById('grid-waitlist');
 
-        // Leave Waitlist Action
-        document.querySelectorAll('button[data-waitlist-id]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = parseInt(e.target.dataset.waitlistId);
-                libraryData.waitlist = libraryData.waitlist.filter(b => b.id !== id);
-                saveData(libraryData);
-                renderGrids();
-                showToast(`Removed from waitlist.`, 'info');
-            });
-        });
-    }
+    gridB.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-id]');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const bookIndex = libraryData.borrowed.findIndex(b => String(b.id) === String(id));
+        if (bookIndex > -1) {
+            const book = libraryData.borrowed.splice(bookIndex, 1)[0];
+            book.returnedDate = new Date().toISOString();
+            libraryData.history.unshift(book);
+            saveData(libraryData);
+            renderGrids();
+            showToast(`"${book.title}" returned successfully!`, 'success');
+        }
+    });
+
+    gridW.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-waitlist-id]');
+        if (!btn) return;
+        const id = btn.dataset.waitlistId;
+        const bookIndex = libraryData.waitlist.findIndex(b => String(b.id) === String(id));
+        if (bookIndex > -1) {
+            libraryData.waitlist.splice(bookIndex, 1);
+            saveData(libraryData);
+            renderGrids();
+            showToast(`Removed from wishlist.`, 'info');
+        }
+    });
 
     // Notifications function mapping to the style we already have
     function showToast(message, type = 'info', duration = 3500) {
